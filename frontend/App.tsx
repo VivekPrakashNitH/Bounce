@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { BounceAvatar } from './components/BounceAvatar';
+// Existing System Design Components
 import { LoadBalancerDemo } from './components/LoadBalancerDemo';
 import { ClientServerDemo } from './components/ClientServerDemo';
 import { ApiGatewayDemo } from './components/ApiGatewayDemo';
@@ -8,23 +9,33 @@ import { DatabaseShardingDemo } from './components/DatabaseShardingDemo';
 import { CachingDemo } from './components/CachingDemo';
 import { DockerDemo } from './components/DockerDemo';
 import { MessageQueueDemo } from './components/MessageQueueDemo';
+import { UniversalSystemDemo } from './components/UniversalSystemDemo';
+import { BackendLanguagesDemo } from './components/BackendLanguagesDemo';
+import { HldLldExplainer } from './components/HldLldExplainer';
+import { DbInternalsDemo } from './components/DbInternalsDemo';
+import { FullStackHowTo } from './components/FullStackHowTo'; 
+import { ConsistentHashingDemo } from './components/ConsistentHashingDemo'; 
+import { DbMigrationDemo } from './components/DbMigrationDemo'; 
+import { DevOpsLoopDemo } from './components/DevOpsLoopDemo';
+
+// Real World / Case Studies
 import { UrlShortenerDemo } from './components/UrlShortenerDemo';
 import { InstagramDemo } from './components/InstagramDemo';
 import { UberDemo } from './components/UberDemo';
-import { UniversalSystemDemo } from './components/UniversalSystemDemo';
-import { BackendLanguagesDemo } from './components/BackendLanguagesDemo';
 import { QuadtreeVisualizer } from './components/QuadtreeVisualizer';
-import { HldLldExplainer } from './components/HldLldExplainer';
+
+// Game Engineering
 import { GameArchDemo } from './components/GameArchDemo';
-import { DbInternalsDemo } from './components/DbInternalsDemo';
 import { GameLoopDemo } from './components/GameLoopDemo';
 import { GameIntroDemo } from './components/GameIntroDemo';
 import { GameNetworkingDemo } from './components/GameNetworkingDemo'; 
 import { HitDetectionDemo } from './components/HitDetectionDemo'; 
-import { FullStackHowTo } from './components/FullStackHowTo'; 
-import { ConsistentHashingDemo } from './components/ConsistentHashingDemo'; // New
-import { DbMigrationDemo } from './components/DbMigrationDemo'; // New
-import { DevOpsLoopDemo } from './components/DevOpsLoopDemo';
+import { OrderMatchingDemo } from './components/OrderMatchingDemo'; 
+
+// NEW: Cybersecurity Components
+import { EncryptionDemo } from './components/Cybersecurity/EncryptionDemo';
+import { SqlInjectionDemo } from './components/Cybersecurity/SqlInjectionDemo';
+
 import { ChatBubble } from './components/ChatBubble';
 import { CodeViewer } from './components/CodeViewer';
 import { CommentSection } from './components/CommentSection';
@@ -66,9 +77,18 @@ export default function App() {
 
   // --- STATE PERSISTENCE LOGIC ---
   useEffect(() => {
-     // Save progress whenever currentLevelIndex changes
+     // Save current level index
      localStorage.setItem('bounce_current_level', currentLevelIndex.toString());
   }, [currentLevelIndex]);
+
+  const saveCompletedLevel = (levelId: string) => {
+      const saved = localStorage.getItem('bounce_completed_levels');
+      let completed = saved ? JSON.parse(saved) : [];
+      if (!completed.includes(levelId)) {
+          completed.push(levelId);
+          localStorage.setItem('bounce_completed_levels', JSON.stringify(completed));
+      }
+  };
 
   const loadSavedProgress = () => {
      const saved = localStorage.getItem('bounce_current_level');
@@ -192,7 +212,10 @@ export default function App() {
   }, [isChatOpen, gameState, currentLevelIndex, activeSnippet, viewState, showQuiz, showProfile]);
 
   const handleLevelComplete = () => {
+    // Save completion
     const currentLevel = COURSE_CONTENT[currentLevelIndex];
+    saveCompletedLevel(currentLevel.id);
+
     if (currentLevel.quiz && !showQuiz) {
         setShowQuiz(true);
         return; 
@@ -243,22 +266,9 @@ export default function App() {
   // --- COMPONENT MAPPING ---
   const renderLevelComponent = () => {
       switch(gameState) {
+          // System Design & Core
           case GameState.LEVEL_HLD_LLD: return <HldLldExplainer />;
           case GameState.LEVEL_BACKEND_LANGUAGES: return <BackendLanguagesDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_QUADTREE_DEEP_DIVE: return <QuadtreeVisualizer />;
-          
-          // New Components Mapped Here
-          case GameState.LEVEL_GAME_INTRO: return <GameIntroDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_GAME_ARCH: return <GameArchDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_GAME_NETWORKING: return <GameNetworkingDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_GAME_PHYSICS: return <HitDetectionDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_DB_INTERNALS: return <DbInternalsDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_GAME_LOOP: return <GameLoopDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_DEVOPS_LOOP: return <DevOpsLoopDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_FULL_STACK_HOWTO: return <FullStackHowTo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_CONSISTENT_HASHING: return <ConsistentHashingDemo onShowCode={handleShowCode} />;
-          case GameState.LEVEL_DB_MIGRATIONS: return <DbMigrationDemo onShowCode={handleShowCode} />;
-
           case GameState.LEVEL_CLIENT_SERVER: return <ClientServerDemo onShowCode={handleShowCode} />;
           case GameState.LEVEL_LOAD_BALANCER: return <LoadBalancerDemo onShowCode={handleShowCode} />;
           case GameState.LEVEL_API_GATEWAY: return <ApiGatewayDemo onShowCode={handleShowCode} />;
@@ -266,9 +276,30 @@ export default function App() {
           case GameState.LEVEL_DB_SHARDING: return <DatabaseShardingDemo onShowCode={handleShowCode} />;
           case GameState.LEVEL_DOCKER: return <DockerDemo onShowCode={handleShowCode} />;
           case GameState.LEVEL_MESSAGE_QUEUES: return <MessageQueueDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_DB_INTERNALS: return <DbInternalsDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_DEVOPS_LOOP: return <DevOpsLoopDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_FULL_STACK_HOWTO: return <FullStackHowTo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_CONSISTENT_HASHING: return <ConsistentHashingDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_DB_MIGRATIONS: return <DbMigrationDemo onShowCode={handleShowCode} />;
+          
+          // Case Studies
           case GameState.CASE_URL_SHORTENER: return <UrlShortenerDemo onShowCode={handleShowCode} />;
           case GameState.CASE_INSTAGRAM: return <InstagramDemo onShowCode={handleShowCode} />;
           case GameState.CASE_UBER: return <UberDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_QUADTREE_DEEP_DIVE: return <QuadtreeVisualizer />;
+          
+          // Game Engineering
+          case GameState.LEVEL_GAME_INTRO: return <GameIntroDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_GAME_ARCH: return <GameArchDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_GAME_NETWORKING: return <GameNetworkingDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_GAME_PHYSICS: return <HitDetectionDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_GAME_LOOP: return <GameLoopDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_ORDER_BOOK: return <OrderMatchingDemo onShowCode={handleShowCode} />;
+
+          // Cybersecurity (NEW)
+          case GameState.LEVEL_CYBER_ENCRYPTION: return <EncryptionDemo onShowCode={handleShowCode} />;
+          case GameState.LEVEL_CYBER_SQLI: return <SqlInjectionDemo onShowCode={handleShowCode} />;
+
           default: 
             return <UniversalSystemDemo level={COURSE_CONTENT[currentLevelIndex]} onShowCode={handleShowCode} />;
       }
@@ -285,6 +316,7 @@ export default function App() {
             onStartLLD={() => startTrack(GameState.LEVEL_HLD_LLD)}
             onStartQuiz={() => startTrack(GameState.CASE_URL_SHORTENER)}
             onStartGameDev={() => startTrack(GameState.LEVEL_GAME_INTRO)}
+            onStartCyber={() => startTrack(GameState.LEVEL_CYBER_ENCRYPTION)}
         />
     );
   }

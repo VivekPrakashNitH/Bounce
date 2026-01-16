@@ -36,7 +36,7 @@ export interface CourseLevel {
   id: GameState;
   title: string;
   description: string;
-  category: 'Fundamentals' | 'Data' | 'Communication' | 'Advanced' | 'Case Study' | 'LLD & Patterns' | 'Languages' | 'Gaming' | 'DevOps' | 'Full Stack';
+  category: 'Fundamentals' | 'Data' | 'Communication' | 'Advanced' | 'Case Study' | 'LLD & Patterns' | 'Languages' | 'Gaming' | 'DevOps' | 'Full Stack' | 'Cybersecurity';
   topics: string[];
   codeSnippet?: CodeSnippet;
   // New Educational Content
@@ -62,8 +62,8 @@ export enum GameState {
   LEVEL_CACHING = 'LEVEL_CACHING',
   LEVEL_DB_SHARDING = 'LEVEL_DB_SHARDING',
   LEVEL_DB_INTERNALS = 'LEVEL_DB_INTERNALS',
-  LEVEL_CONSISTENT_HASHING = 'LEVEL_CONSISTENT_HASHING', // New
-  LEVEL_DB_MIGRATIONS = 'LEVEL_DB_MIGRATIONS', // New (Alembic)
+  LEVEL_CONSISTENT_HASHING = 'LEVEL_CONSISTENT_HASHING', 
+  LEVEL_DB_MIGRATIONS = 'LEVEL_DB_MIGRATIONS', 
   
   // Module 3: Communication & Infrastructure
   LEVEL_DOCKER = 'LEVEL_DOCKER',
@@ -87,4 +87,9 @@ export enum GameState {
   LEVEL_GAME_NETWORKING = 'LEVEL_GAME_NETWORKING',
   LEVEL_GAME_PHYSICS = 'LEVEL_GAME_PHYSICS',
   LEVEL_GAME_ARCH = 'LEVEL_GAME_ARCH', 
+  LEVEL_ORDER_BOOK = 'LEVEL_ORDER_BOOK',
+
+  // Module 7: Cybersecurity (New)
+  LEVEL_CYBER_ENCRYPTION = 'LEVEL_CYBER_ENCRYPTION',
+  LEVEL_CYBER_SQLI = 'LEVEL_CYBER_SQLI',
 }

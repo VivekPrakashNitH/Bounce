@@ -46,7 +46,7 @@ export const GameIntroDemo: React.FC<Props> = ({ onShowCode }) => {
           <div className="flex items-center gap-4">
              <BounceAvatar className="w-10 h-10" />
              <h3 className="text-xl font-mono text-red-400 flex items-center gap-2">
-                <Gamepad2 /> Let's Build a Game Engine
+                <Gamepad2 /> Let's Understand Game Engines
              </h3>
           </div>
           <div className="flex gap-2">
@@ -59,12 +59,18 @@ export const GameIntroDemo: React.FC<Props> = ({ onShowCode }) => {
 
        <div className="grid grid-cols-2 gap-8 h-64">
            {/* Visualizer */}
-           <div className="col-span-1 bg-black/50 border border-slate-700 rounded-xl p-6 relative flex flex-col items-center justify-center">
+           <div className="col-span-1 bg-black/50 border border-slate-700 rounded-xl p-6 relative flex flex-col items-center justify-center overflow-hidden">
                
                {stage === 'off' && (
-                   <button onClick={startGame} className="flex flex-col items-center gap-2 text-slate-500 hover:text-white transition-colors group">
-                       <Power size={48} className="group-hover:scale-110 transition-transform" />
-                       <span className="text-sm font-bold">START ENGINE</span>
+                   <button onClick={startGame} className="relative group flex flex-col items-center gap-2 text-slate-500 hover:text-white transition-colors z-10">
+                       <div className="relative">
+                           {/* Ripple Effect */}
+                           <div className="absolute inset-0 bg-red-500/30 rounded-full animate-ping opacity-75 duration-1000"></div>
+                           <div className="relative bg-slate-900 rounded-full p-2 border border-slate-700 group-hover:border-red-500 transition-colors">
+                               <Power size={40} className="text-red-500" />
+                           </div>
+                       </div>
+                       <span className="text-xs font-bold tracking-widest animate-pulse">CLICK TO START</span>
                    </button>
                )}
 
@@ -88,8 +94,8 @@ export const GameIntroDemo: React.FC<Props> = ({ onShowCode }) => {
                            <span className="text-xs font-mono text-red-400 block font-bold">GAME LOOP RUNNING</span>
                            <span className="text-[10px] text-slate-500">60 FPS</span>
                        </div>
-                       <button onClick={stopGame} className="mt-2 px-3 py-1 bg-red-900/50 border border-red-500/50 rounded text-[10px] text-red-300 hover:bg-red-900">
-                           STOP
+                       <button onClick={stopGame} className="mt-2 px-3 py-1 bg-red-900/50 border border-red-500/50 rounded text-[10px] text-red-300 hover:bg-red-900 transition-colors">
+                           STOP ENGINE
                        </button>
                    </div>
                )}
@@ -108,17 +114,17 @@ export const GameIntroDemo: React.FC<Props> = ({ onShowCode }) => {
                <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
                    <h4 className="text-sm font-bold text-white mb-2">How Games Work</h4>
                    <p className="text-xs text-slate-400 leading-relaxed mb-2">
-                       Unlike web apps that wait for requests, games run in an <b>Infinite Loop</b>.
+                       Unlike web apps that wait for requests, games run in an <b>Infinite Loop</b> (Input &rarr; Update &rarr; Render).
                    </p>
                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-300 bg-black/30 p-2 rounded">
                        1. Init() <span className="text-slate-600">&rarr;</span> 2. Loop() <span className="text-slate-600">&rarr;</span> 3. Cleanup()
                    </div>
                </div>
 
-               <div className="flex-1 bg-black p-3 rounded-lg border border-slate-800 font-mono text-xs text-green-400 overflow-hidden relative">
-                   <div className="absolute top-0 right-0 bg-slate-900 px-2 py-1 text-[8px] text-slate-500">CONSOLE</div>
+               <div className="flex-1 bg-black p-3 rounded-lg border border-slate-800 font-mono text-xs text-green-400 overflow-hidden relative shadow-inner">
+                   <div className="absolute top-0 right-0 bg-slate-900 px-2 py-1 text-[8px] text-slate-500">ENGINE CONSOLE</div>
                    {log.map((l, i) => (
-                       <div key={i} className="mb-1 opacity-80">{l}</div>
+                       <div key={i} className="mb-1 opacity-80 border-l-2 border-transparent pl-1 hover:border-green-600 transition-all">{l}</div>
                    ))}
                </div>
            </div>

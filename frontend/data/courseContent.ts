@@ -437,6 +437,97 @@ sendto(sock, &p, sizeof(p), 0, (struct sockaddr*)&addr, sizeof(addr));`
       explanation: "To prevent cheating, the client sends inputs ('I moved forward'), and the server calculates the result ('You are now at X,Y')."
     }
   },
+  {
+    id: GameState.LEVEL_ORDER_BOOK,
+    title: "C++ Project: Order Matching Engine",
+    description: "Visualizing a Limit Order Book for Stock Trading.",
+    category: 'Gaming', // It fits here as high-perf simulation
+    topics: ["Limit Orders", "Market Orders", "Matching Algorithms", "Low Latency"],
+    realWorldUses: ["NASDAQ/NYSE", "Crypto Exchanges", "HFT Firms"],
+    pros: ["Microsecond latency", "Highly optimized C++"],
+    cons: ["Extremely complex error handling", "Zero tolerance for bugs"],
+    codeSnippet: {
+      title: "Order Matching (C++)",
+      language: "cpp",
+      description: "The core logic for matching a Buy order with a Sell order.",
+      code: `void match(Order& incoming) {
+    while (!orderBook.empty() && incoming.qty > 0) {
+        Order& best = orderBook.top(); // Best price
+        
+        if (incoming.price >= best.price) {
+            int tradeQty = min(incoming.qty, best.qty);
+            executeTrade(incoming, best, tradeQty);
+            
+            incoming.qty -= tradeQty;
+            best.qty -= tradeQty;
+            if (best.qty == 0) orderBook.pop();
+        } else {
+            break; // No match possible
+        }
+    }
+}`
+    }
+  },
+
+  // --- MODULE 7: CYBERSECURITY ---
+  {
+    id: GameState.LEVEL_CYBER_ENCRYPTION,
+    title: "Cryptography: Encryption & MITM",
+    description: "How to protect data from eavesdroppers (Man-in-the-Middle).",
+    category: 'Cybersecurity',
+    topics: ["Symmetric (AES)", "Asymmetric (RSA)", "MITM Attacks", "TLS/SSL"],
+    realWorldUses: ["HTTPS (Web Browsing)", "WhatsApp E2E Encryption", "Secure Banking"],
+    pros: ["Data Confidentiality", "Integrity (Tamper proof)"],
+    cons: ["Key Management is hard", "Performance overhead"],
+    quiz: {
+        question: "In Public Key Encryption, which key do you use to encrypt a message for Bob?",
+        options: ["Your Private Key", "Bob's Public Key", "Bob's Private Key"],
+        correctIndex: 1,
+        explanation: "You encrypt with the recipient's (Bob's) Public Key. Only Bob's Private Key can decrypt it."
+    },
+    codeSnippet: {
+        title: "AES Encryption (Python)",
+        language: "python",
+        description: "Encrypting a secret message.",
+        code: `from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+cipher = Fernet(key)
+
+msg = b"Attack at dawn"
+encrypted = cipher.encrypt(msg)
+# Output: b'gAAAAAB...'
+
+print(cipher.decrypt(encrypted))`
+    }
+  },
+  {
+    id: GameState.LEVEL_CYBER_SQLI,
+    title: "Web Security: SQL Injection",
+    description: "The most dangerous web vulnerability explained.",
+    category: 'Cybersecurity',
+    topics: ["Input Validation", "Prepared Statements", "OWASP Top 10"],
+    realWorldUses: ["Pentesting", "Securing Login Forms", "Bug Bounties"],
+    pros: ["Preventing data leaks", "Protecting admin access"],
+    cons: ["Requires disciplined coding", "Legacy code vulnerability"],
+    quiz: {
+        question: "How do you fix SQL Injection?",
+        options: ["Use a better firewall", "Sanitize inputs manually", "Use Parameterized Queries"],
+        correctIndex: 2,
+        explanation: "Parameterized Queries (Prepared Statements) treat input as data, not executable code, neutralizing the attack."
+    },
+    codeSnippet: {
+        title: "Vulnerable vs Secure SQL",
+        language: "javascript",
+        description: "Why string concatenation is dangerous.",
+        code: `// ❌ VULNERABLE
+const query = "SELECT * FROM users WHERE name = '" + userInput + "'";
+
+// ✅ SECURE (Parameterized)
+const query = "SELECT * FROM users WHERE name = ?";
+db.execute(query, [userInput]);`
+    }
+  },
   
   // --- MODULE 6: FULL STACK ---
   {

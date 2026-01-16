@@ -1,8 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Send, LogOut, Loader2, Code, X, AlertCircle } from 'lucide-react';
+import { MessageSquare, Send, LogOut, Loader2, Code, X } from 'lucide-react';
 import { JavaSpringBootGenerator } from './JavaSpringBootGenerator';
-import { levelCommentApi, authApi, type LevelComment, type User, type GitHubAuthRequest } from '../services/apiService';
+
+interface Comment {
+  id: number;
+  user: string;
+  avatar?: string;
+  text: string;
+  timestamp: string;
+}
 
 interface CommentSectionProps {
   levelId: string;
@@ -30,186 +37,65 @@ const GoogleLogo = () => (
   </svg>
 );
 
-// GitHub Logo SVG
-const GitHubLogo = () => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-  </svg>
-);
-
 export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
-  const [comments, setComments] = useState<LevelComment[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{name: string, email: string, avatar: string} | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isPosting, setIsPosting] = useState(false);
 
-  // Load comments from backend
+  // Load comments from localStorage specific to this levelId
   useEffect(() => {
-    const loadComments = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const fetchedComments = await levelCommentApi.getComments(levelId);
-        setComments(fetchedComments);
-      } catch (err) {
-        console.error('Failed to load comments:', err);
-        setError('Failed to load comments. Using fallback mode.');
-        // Fallback to localStorage if backend is unavailable
-        const saved = localStorage.getItem(`bounce_comments_${levelId}`);
-        if (saved) {
-          try {
-            setComments(JSON.parse(saved));
-          } catch (e) {
-            setComments([]);
-          }
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const saved = localStorage.getItem(`bounce_comments_${levelId}`);
+    if (saved) {
+      setComments(JSON.parse(saved));
+    } else {
+      setComments([]);
+    }
 
-    loadComments();
-
-    // Check for logged in user (from localStorage for now, can be enhanced with JWT)
+    // Check for logged in user
     const savedUser = localStorage.getItem('curious_google_user');
     if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        // Try to sync with backend
-        if (userData.email) {
-          authApi.getUserByEmail(userData.email).then(backendUser => {
-            if (backendUser) {
-              setUser(backendUser);
-              localStorage.setItem('curious_google_user', JSON.stringify(backendUser));
-            }
-          }).catch(() => {
-            // Backend unavailable, use local user
-          });
-        }
-      } catch (e) {
-        console.error('Failed to parse user:', e);
-      }
+        setUser(JSON.parse(savedUser));
     }
   }, [levelId]);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoggingIn(true);
-    setError(null);
     
-    try {
-      // In production, this will use real Google OAuth
-      // For now, using mock (will be replaced with @react-oauth/google)
-      const mockUser = {
-        name: "Alex Developer",
-        email: "alex.dev@gmail.com",
-        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-        googleId: "mock-google-id-123"
-      };
-
-      // Register/login with backend
-      const backendUser = await authApi.googleAuth(mockUser);
-      setUser(backendUser);
-      localStorage.setItem('curious_google_user', JSON.stringify(backendUser));
-    } catch (err) {
-      console.error('Login failed:', err);
-      // Fallback: use local storage
-      const mockUser = {
-        name: "Alex Developer",
-        email: "alex.dev@gmail.com",
-        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c"
-      };
-      setUser(mockUser);
-      localStorage.setItem('curious_google_user', JSON.stringify(mockUser));
-      setError('Backend unavailable. Using offline mode.');
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleGitHubLogin = async () => {
-    setIsLoggingIn(true);
-    setError(null);
-    
-    try {
-      // In production, this will use real GitHub OAuth
-      // For now, using mock (will be replaced with real OAuth)
-      const mockUser: GitHubAuthRequest = {
-        name: "GitHub User",
-        email: "github.user@example.com",
-        avatar: "https://github.com/identicons/github.png",
-        githubId: "mock-github-id-123"
-      };
-
-      // Register/login with backend
-      const backendUser = await authApi.githubAuth(mockUser);
-      setUser(backendUser);
-      localStorage.setItem('curious_google_user', JSON.stringify(backendUser));
-    } catch (err) {
-      console.error('Login failed:', err);
-      // Fallback: use local storage
-      const mockUser = {
-        name: "GitHub User",
-        email: "github.user@example.com",
-        avatar: "https://github.com/identicons/github.png"
-      };
-      setUser(mockUser);
-      localStorage.setItem('curious_google_user', JSON.stringify(mockUser));
-      setError('Backend unavailable. Using offline mode.');
-    } finally {
-      setIsLoggingIn(false);
-    }
+    // Simulate Network/OAuth Delay
+    setTimeout(() => {
+        const mockUser = {
+            name: "Alex Developer",
+            email: "alex.dev@gmail.com",
+            avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c" 
+        };
+        localStorage.setItem('curious_google_user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        setIsLoggingIn(false);
+    }, 1500);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('curious_google_user');
-    setUser(null);
+      localStorage.removeItem('curious_google_user');
+      setUser(null);
   };
 
-  const handlePost = async () => {
+  const handlePost = () => {
     if (!newComment.trim() || !user) return;
 
-    setIsPosting(true);
-    setError(null);
+    const comment: Comment = {
+      id: Date.now(),
+      user: user.name,
+      avatar: user.avatar,
+      text: newComment,
+      timestamp: new Date().toLocaleDateString(),
+    };
 
-    try {
-      const newCommentData = await levelCommentApi.createComment({
-        content: newComment,
-        levelId: levelId,
-        author: user.name,
-        authorEmail: user.email,
-        authorAvatar: user.avatar,
-      });
-
-      setComments(prev => [newCommentData, ...prev]);
-      setNewComment('');
-    } catch (err) {
-      console.error('Failed to post comment:', err);
-      setError('Failed to post comment. Please try again.');
-      
-      // Fallback: save to localStorage
-      const fallbackComment: LevelComment = {
-        id: Date.now(),
-        content: newComment,
-        levelId: levelId,
-        author: user.name,
-        authorEmail: user.email,
-        authorAvatar: user.avatar,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setComments(prev => [fallbackComment, ...prev]);
-      const saved = localStorage.getItem(`bounce_comments_${levelId}`);
-      const existing = saved ? JSON.parse(saved) : [];
-      localStorage.setItem(`bounce_comments_${levelId}`, JSON.stringify([fallbackComment, ...existing]));
-      setNewComment('');
-    } finally {
-      setIsPosting(false);
-    }
+    const updated = [comment, ...comments];
+    setComments(updated);
+    localStorage.setItem(`bounce_comments_${levelId}`, JSON.stringify(updated));
+    setNewComment('');
   };
 
   return (
@@ -218,7 +104,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
         <div className="flex items-center gap-2">
             <MessageSquare size={16} className="text-zinc-400" />
             <h3 className="text-sm font-bold text-zinc-200">Community Discussion</h3>
-            <span className="text-xs text-zinc-600">{isLoading ? 'Loading...' : `${comments.length} Comments`}</span>
+            <span className="text-xs text-zinc-600">{comments.length} Comments</span>
         </div>
         <button 
             onClick={() => setShowBlueprints(!showBlueprints)}
@@ -237,14 +123,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
 
       <div className="p-4 space-y-4">
         
-        {/* Error Message */}
-        {error && (
-          <div className="bg-yellow-900/50 border border-yellow-700 rounded-lg p-3 flex items-center gap-2 text-yellow-300 text-xs animate-in fade-in">
-            <AlertCircle size={14} />
-            <span>{error}</span>
-          </div>
-        )}
-        
         {/* Auth / Input Area */}
         {!user ? (
             <div className="bg-zinc-950/50 rounded-lg p-8 border border-zinc-800 flex flex-col items-center justify-center gap-4">
@@ -253,33 +131,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
                     <p className="text-xs text-zinc-500">Sign in to share your system design thoughts.</p>
                 </div>
                 
-                <div className="flex flex-col gap-3 w-full max-w-xs">
-                    <button 
-                        onClick={handleGoogleLogin}
-                        disabled={isLoggingIn}
-                        className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-700 px-6 py-2.5 rounded-full font-medium text-sm transition-all active:scale-95 shadow-lg border border-gray-300 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isLoggingIn ? (
-                            <Loader2 size={20} className="animate-spin text-gray-500" />
-                        ) : (
-                            <GoogleLogo />
-                        )}
-                        <span>{isLoggingIn ? 'Connecting...' : 'Sign in with Google'}</span>
-                    </button>
-                    
-                    <button 
-                        onClick={handleGitHubLogin}
-                        disabled={isLoggingIn}
-                        className="flex items-center justify-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all active:scale-95 shadow-lg border border-gray-700 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isLoggingIn ? (
-                            <Loader2 size={20} className="animate-spin text-gray-400" />
-                        ) : (
-                            <GitHubLogo />
-                        )}
-                        <span>{isLoggingIn ? 'Connecting...' : 'Sign in with GitHub'}</span>
-                    </button>
-                </div>
+                <button 
+                    onClick={handleGoogleLogin}
+                    disabled={isLoggingIn}
+                    className="flex items-center gap-3 bg-white hover:bg-gray-100 text-gray-700 px-6 py-2.5 rounded-full font-medium text-sm transition-all active:scale-95 shadow-lg border border-gray-300 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isLoggingIn ? (
+                        <Loader2 size={20} className="animate-spin text-gray-500" />
+                    ) : (
+                        <GoogleLogo />
+                    )}
+                    <span>{isLoggingIn ? 'Connecting...' : 'Sign in with Google'}</span>
+                </button>
                 <div className="text-[10px] text-zinc-600 mt-2">
                    This is a secure simulation. No real credentials needed.
                 </div>
@@ -311,10 +174,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
                          />
                          <button 
                             onClick={handlePost}
-                            disabled={!newComment.trim() || isPosting}
+                            disabled={!newComment.trim()}
                             className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 rounded-lg transition-colors flex items-center justify-center"
                         >
-                            {isPosting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                            <Send size={18} />
                          </button>
                     </div>
                     <div className="text-[10px] text-zinc-500 flex justify-between px-1">
@@ -327,35 +190,25 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
 
         {/* Comment List */}
         <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar pr-2 mt-6">
-           {isLoading ? (
-             <div className="text-center py-8 text-zinc-600 text-xs">
-               <Loader2 size={20} className="animate-spin mx-auto mb-2" />
-               Loading comments...
-             </div>
-           ) : comments.length === 0 ? (
+           {comments.length === 0 && (
              <div className="text-center py-8 text-zinc-700 text-xs italic border border-dashed border-zinc-800 rounded-lg">
                No comments yet. Be the first to start the discussion!
              </div>
-           ) : (
-             comments.map((c) => (
-               <div key={c.id} className="flex gap-3 animate-in fade-in slide-in-from-top-2 group">
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 border border-zinc-700 text-zinc-400 font-bold text-xs select-none overflow-hidden">
-                      {c.authorAvatar ? (
-                        <img src={c.authorAvatar} alt={c.author} className="w-full h-full object-cover" />
-                      ) : (
-                        c.author.charAt(0).toUpperCase()
-                      )}
-                  </div>
-                  <div className="flex-1 bg-zinc-900/50 p-3 rounded-r-xl rounded-bl-xl border border-zinc-800/50 group-hover:border-zinc-700 transition-colors">
-                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-zinc-300">{c.author}</span>
-                        <span className="text-[10px] text-zinc-600">• {new Date(c.createdAt).toLocaleDateString()} at {new Date(c.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                     </div>
-                     <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap">{c.content}</p>
-                  </div>
-               </div>
-             ))
            )}
+           {comments.map((c) => (
+             <div key={c.id} className="flex gap-3 animate-in fade-in slide-in-from-top-2 group">
+                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 border border-zinc-700 text-zinc-400 font-bold text-xs select-none">
+                    {c.user.charAt(0)}
+                </div>
+                <div className="flex-1 bg-zinc-900/50 p-3 rounded-r-xl rounded-bl-xl border border-zinc-800/50 group-hover:border-zinc-700 transition-colors">
+                   <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-zinc-300">{c.user}</span>
+                      <span className="text-[10px] text-zinc-600">• {c.timestamp}</span>
+                   </div>
+                   <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap">{c.text}</p>
+                </div>
+             </div>
+           ))}
         </div>
       </div>
     </div>
