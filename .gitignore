@@ -1,0 +1,81 @@
+# Documentation files - Personal notes (DO NOT UPLOAD TO GITHUB)
+WHERE_IS_EVERYTHING.md
+TEST_COMMENTS.md
+START_HERE_PRODUCTION.md
+QUICK_START_GUIDE.md
+COMPLETE_EXPLANATION.md
+DATABASE_VIEW.md
+API_TESTING.md
+HOW_TO_USE.md
+RUN_INSTRUCTIONS.md
+RUN_STANDALONE.md
+QUICK_START.md
+DOCKER_FIXED.md
+ARCHITECTURE_EXPLAINED.md
+QUANT_PROJECT_PLAN.md
+FAANG_ENHANCEMENT_PLAN.md
+START.bat
+
+# Extra documentation files (personal use only)
+COMPLETE_PRODUCTION_GUIDE.md
+GITHUB_UPLOAD_GUIDE.md
+PGADMIN_CONNECTION.md
+PRE_GITHUB_CHECKLIST.md
+PRODUCTION_DEPLOYMENT.md
+REAL_GOOGLE_OAUTH.md
+backend/README.md
+frontend/README.md
+
+# Only README.md should be uploaded
+# README.md
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/target/
+backend/.mvn/
+.mvn/
+
+# Build outputs
+dist/
+build/
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+frontend/.env
+frontend/.env.local
+backend/.env
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
