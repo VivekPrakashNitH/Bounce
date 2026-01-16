@@ -1,0 +1,5 @@
+{
+  "name": "Bounce System Design",
+  "description": "A gamified interactive system design tutor where a bouncing character navigates concepts.",
+  "requestFramePermissions": []
+}
