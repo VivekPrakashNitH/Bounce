@@ -77,18 +77,9 @@ export default function App() {
 
   // --- STATE PERSISTENCE LOGIC ---
   useEffect(() => {
-     // Save current level index
+     // Save progress whenever currentLevelIndex changes
      localStorage.setItem('bounce_current_level', currentLevelIndex.toString());
   }, [currentLevelIndex]);
-
-  const saveCompletedLevel = (levelId: string) => {
-      const saved = localStorage.getItem('bounce_completed_levels');
-      let completed = saved ? JSON.parse(saved) : [];
-      if (!completed.includes(levelId)) {
-          completed.push(levelId);
-          localStorage.setItem('bounce_completed_levels', JSON.stringify(completed));
-      }
-  };
 
   const loadSavedProgress = () => {
      const saved = localStorage.getItem('bounce_current_level');
@@ -100,6 +91,15 @@ export default function App() {
          }
      }
      return false;
+  };
+  
+  const saveCompletedLevel = (levelId: string) => {
+      const saved = localStorage.getItem('bounce_completed_levels');
+      let completed = saved ? JSON.parse(saved) : [];
+      if (!completed.includes(levelId)) {
+          completed.push(levelId);
+          localStorage.setItem('bounce_completed_levels', JSON.stringify(completed));
+      }
   };
   // -------------------------------
 
@@ -474,6 +474,11 @@ export default function App() {
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent" />
             </div>
           ))}
+
+          {/* NEW: Large Background Level Number */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30vw] font-black text-white/5 pointer-events-none select-none z-0 tracking-tighter">
+             {(currentLevelIndex + 1).toString().padStart(2, '0')}
+          </div>
 
           <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center border-l border-white/5 backdrop-blur-sm">
              <div className="text-white font-mono text-xs rotate-90 whitespace-nowrap tracking-[0.3em] font-bold opacity-70">
