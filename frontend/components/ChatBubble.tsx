@@ -11,10 +11,20 @@ interface ChatBubbleProps {
 export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: "Ready to design systems. Ask me anything." }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -43,26 +53,26 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute bottom-full mb-4 right-0 w-80 md:w-96 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[200] animate-in fade-in slide-in-from-bottom-5 duration-200">
+    <div className={`absolute bottom-full mb-4 right-0 ${isMobile ? 'w-72' : 'w-80 md:w-96'} bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[200] animate-in fade-in slide-in-from-bottom-5 duration-200`}>
       
       {/* Header */}
-      <div className="bg-white/5 p-3 border-b border-white/5 flex justify-between items-center">
+      <div className={`bg-white/5 ${isMobile ? 'p-2' : 'p-3'} border-b border-white/5 flex justify-between items-center`}>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-            <Bot size={12} className="text-black" />
+          <div className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} bg-white rounded-full flex items-center justify-center`}>
+            <Bot size={isMobile ? 10 : 12} className="text-black" />
           </div>
-          <span className="text-white font-bold text-xs tracking-wide">SYSTEM AI</span>
+          <span className={`text-white font-bold ${isMobile ? 'text-[10px]' : 'text-xs'} tracking-wide`}>SYSTEM AI</span>
         </div>
         <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
-          <X size={14} />
+          <X size={isMobile ? 12 : 14} />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 h-64 overflow-y-auto space-y-3 custom-scrollbar">
+      <div className={`flex-1 ${isMobile ? 'p-3 h-48' : 'p-4 h-64'} overflow-y-auto space-y-3 custom-scrollbar`}>
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
+            <div className={`max-w-[85%] rounded-lg ${isMobile ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2 text-xs'} leading-relaxed ${
               msg.role === 'user' 
                 ? 'bg-white text-black' 
                 : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
@@ -73,8 +83,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-800 rounded-lg px-3 py-2 border border-zinc-700">
-              <Loader2 size={12} className="animate-spin text-zinc-400" />
+            <div className={`bg-zinc-800 rounded-lg ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} border border-zinc-700`}>
+              <Loader2 size={isMobile ? 10 : 12} className="animate-spin text-zinc-400" />
             </div>
           </div>
         )}
@@ -82,7 +92,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
       </div>
 
       {/* Input */}
-      <div className="p-3 bg-black/20 border-t border-white/5">
+      <div className={`${isMobile ? 'p-2' : 'p-3'} bg-black/20 border-t border-white/5`}>
         <div className="flex gap-2">
           <input 
             type="text" 
@@ -90,14 +100,14 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type a message..."
-            className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition-colors placeholder:text-zinc-600"
+            className={`flex-1 bg-zinc-900 border border-zinc-800 rounded ${isMobile ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2 text-xs'} text-white focus:outline-none focus:border-zinc-500 transition-colors placeholder:text-zinc-600`}
           />
           <button 
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="bg-white hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-black p-2 rounded transition-colors"
+            className={`bg-white hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-black ${isMobile ? 'p-1.5' : 'p-2'} rounded transition-colors`}
           >
-            <Send size={14} />
+            <Send size={isMobile ? 12 : 14} />
           </button>
         </div>
       </div>

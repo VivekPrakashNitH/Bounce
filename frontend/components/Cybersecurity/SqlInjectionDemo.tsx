@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, ShieldAlert, CheckCircle, Code2, Lock } from 'lucide-react';
 import { BounceAvatar } from '../BounceAvatar';
 
@@ -11,6 +11,16 @@ export const SqlInjectionDemo: React.FC<Props> = ({ onShowCode }) => {
   const [input, setInput] = useState('');
   const [query, setQuery] = useState("SELECT * FROM users WHERE name = '...'");
   const [result, setResult] = useState<'idle' | 'success' | 'hacked'>('idle');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
@@ -30,79 +40,79 @@ export const SqlInjectionDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
-          <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-red-400 flex items-center gap-2">
-                <Database /> SQL Injection (SQLi)
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} border-b border-slate-700 ${isMobile ? 'pb-3 mb-4' : 'pb-4 mb-8'}`}>
+          <div className="flex items-center gap-3">
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-red-400 flex items-center gap-2`}>
+                <Database size={isMobile ? 16 : 20} /> SQL Injection
              </h3>
           </div>
           <div className="flex gap-2">
-            <button onClick={onShowCode} className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-cyan-400 transition-colors">
-                <Code2 size={14} /> Show Fix
+            <button onClick={onShowCode} className={`flex items-center gap-1 ${isMobile ? 'text-[10px] px-2 py-1' : 'text-xs px-3 py-1'} bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-cyan-400 transition-colors`}>
+                <Code2 size={isMobile ? 12 : 14} /> Show Fix
             </button>
           </div>
        </div>
 
-       <div className="grid grid-cols-2 gap-8">
+       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-8'}`}>
            
            {/* Attacker View */}
-           <div className="col-span-1 flex flex-col gap-4">
-               <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                   <label className="text-xs font-bold text-white uppercase mb-2 block">Login Form</label>
+           <div className="flex flex-col gap-4">
+               <div className={`bg-slate-800 ${isMobile ? 'p-4' : 'p-6'} rounded-xl border border-slate-700`}>
+                   <label className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-bold text-white uppercase mb-2 block`}>Login Form</label>
                    <input 
                      type="text" 
                      value={input}
                      onChange={handleChange}
                      placeholder="Enter Username"
-                     className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-red-500 outline-none font-mono text-sm"
+                     className={`w-full bg-slate-900 border border-slate-600 rounded ${isMobile ? 'p-2 text-xs' : 'p-3 text-sm'} text-white focus:border-red-500 outline-none font-mono`}
                    />
                    <button 
                      onClick={execute}
-                     className="w-full mt-4 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded transition-colors"
+                     className={`w-full ${isMobile ? 'mt-3 py-1.5 text-sm' : 'mt-4 py-2'} bg-red-600 hover:bg-red-500 text-white font-bold rounded transition-colors`}
                    >
                        Login
                    </button>
                </div>
 
-               <div className="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-                   <h4 className="text-xs font-bold text-yellow-500 mb-1">Hacker Hint:</h4>
-                   <p className="text-xs text-yellow-200">
-                       Try to trick the logic. The code connects your string directly. 
-                       <br/>Try typing: <span className="font-mono bg-black px-1 rounded text-white">' OR '1'='1</span>
+               <div className={`${isMobile ? 'p-3' : 'p-4'} bg-yellow-900/20 border border-yellow-500/30 rounded-lg`}>
+                   <h4 className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-bold text-yellow-500 mb-1`}>Hacker Hint:</h4>
+                   <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-yellow-200`}>
+                       Try to trick the logic. 
+                       <br/>Try: <span className="font-mono bg-black px-1 rounded text-white">' OR '1'='1</span>
                    </p>
                </div>
            </div>
 
            {/* Backend View */}
-           <div className="col-span-1 flex flex-col gap-4">
-               <div className="flex-1 bg-black p-4 rounded-xl border border-slate-700 font-mono text-sm relative overflow-hidden">
-                   <div className="text-slate-500 text-xs mb-2">// Server-side Query Builder</div>
-                   <div className="text-purple-400">const query = </div>
-                   <div className="text-green-300 break-words">
+           <div className="flex flex-col gap-4">
+               <div className={`flex-1 bg-black ${isMobile ? 'p-3' : 'p-4'} rounded-xl border border-slate-700 font-mono ${isMobile ? 'text-xs' : 'text-sm'} relative overflow-hidden`}>
+                   <div className={`text-slate-500 ${isMobile ? 'text-[10px]' : 'text-xs'} mb-2`}>// Server-side Query</div>
+                   <div className={`${isMobile ? 'text-[10px]' : 'text-sm'} text-purple-400`}>const query = </div>
+                   <div className={`${isMobile ? 'text-[10px]' : 'text-sm'} text-green-300 break-words`}>
                        "SELECT * FROM users WHERE name = '<span className="text-white bg-slate-800 px-1 rounded">{input}</span>'"
                    </div>
                    
                    {result === 'hacked' && (
-                       <div className="mt-4 p-2 bg-red-900/50 border border-red-500 rounded text-red-200 text-xs animate-pulse">
-                           ⚠️ CRITICAL: Query is always TRUE because '1'='1'. <br/>
+                       <div className={`mt-3 p-2 bg-red-900/50 border border-red-500 rounded text-red-200 ${isMobile ? 'text-[10px]' : 'text-xs'} animate-pulse`}>
+                           ⚠️ Query is always TRUE! <br/>
                            Database dumps ALL users.
                        </div>
                    )}
                    {result === 'success' && (
-                       <div className="mt-4 p-2 bg-green-900/50 border border-green-500 rounded text-green-200 text-xs">
+                       <div className={`mt-3 p-2 bg-green-900/50 border border-green-500 rounded text-green-200 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
                            ✅ Valid user found. Logged in.
                        </div>
                    )}
                </div>
 
                {/* Database Status */}
-               <div className={`p-4 rounded-lg border flex items-center gap-4 transition-all ${result === 'hacked' ? 'bg-red-600 text-white border-red-500' : 'bg-slate-800 border-slate-700'}`}>
-                   <Database size={24} />
+               <div className={`${isMobile ? 'p-3' : 'p-4'} rounded-lg border flex items-center gap-3 transition-all ${result === 'hacked' ? 'bg-red-600 text-white border-red-500' : 'bg-slate-800 border-slate-700'}`}>
+                   <Database size={isMobile ? 18 : 24} />
                    <div>
-                       <div className="text-sm font-bold">{result === 'hacked' ? 'DB BREACHED' : 'Database Secure'}</div>
-                       <div className="text-xs opacity-70">{result === 'hacked' ? 'dumping all_users table...' : 'Waiting for query...'}</div>
+                       <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold`}>{result === 'hacked' ? 'DB BREACHED' : 'Database Secure'}</div>
+                       <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} opacity-70`}>{result === 'hacked' ? 'dumping all_users...' : 'Waiting...'}</div>
                    </div>
                </div>
            </div>

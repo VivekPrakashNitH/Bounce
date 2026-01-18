@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Zap, Clock, Code2, MousePointerClick, RefreshCcw } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -8,6 +8,14 @@ interface Props {
 }
 
 export const CachingDemo: React.FC<Props> = ({ onShowCode }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Simple Cache: key -> val. Ordered array simulates LRU (index 0 is least recently used)
   const [cache, setCache] = useState<{key: string, val: string}[]>([]);
   const [dbData] = useState(['User_A', 'User_B', 'User_C', 'User_D', 'User_E']);
@@ -62,23 +70,23 @@ export const CachingDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row justify-between'} items-center border-b border-slate-700 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-yellow-400 flex items-center gap-2">
-                <Zap /> Level 4: LRU Caching
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-yellow-400 flex items-center gap-2`}>
+                <Zap size={isMobile ? 16 : 20} /> Level 4: LRU Caching
              </h3>
           </div>
           <div className="flex gap-2">
             <button onClick={onShowCode} className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-cyan-400 transition-colors">
                 <Code2 size={14} /> Show Code
             </button>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Least Recently Used</span>
+            {!isMobile && <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Least Recently Used</span>}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 h-64">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-8'} ${isMobile ? 'h-auto' : 'h-64'}`}>
             
             {/* Control Panel */}
             <div className="col-span-1 flex flex-col gap-4">
@@ -110,10 +118,10 @@ export const CachingDemo: React.FC<Props> = ({ onShowCode }) => {
             </div>
 
             {/* Visualizer */}
-            <div className="col-span-1 flex flex-col items-center justify-center relative bg-slate-800/50 rounded-xl border border-slate-700">
+            <div className={`col-span-1 flex flex-col items-center justify-center relative bg-slate-800/50 rounded-xl border border-slate-700 ${isMobile ? 'py-6' : ''}`}>
                 <span className="absolute top-2 right-2 text-[10px] text-slate-500 uppercase font-bold">Cache Memory (Max 3)</span>
                 
-                <div className="flex flex-col-reverse gap-2 w-48">
+                <div className={`flex flex-col-reverse gap-2 ${isMobile ? 'w-40' : 'w-48'}`}>
                     {/* Empty Slots Filler */}
                     {Array.from({ length: Math.max(0, CACHE_SIZE - cache.length) }).map((_, i) => (
                         <div key={`empty-${i}`} className="h-10 border-2 border-dashed border-slate-600 rounded flex items-center justify-center text-slate-600 text-xs">

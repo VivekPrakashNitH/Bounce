@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Laptop, Database, ArrowRight, ArrowLeft, Code2, MousePointerClick } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 import { ArchitectureInfo } from './ArchitectureInfo'; // Import the new component
@@ -11,6 +11,14 @@ interface Props {
 }
 
 export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sending' | 'processing' | 'receiving' | 'done'>('idle');
   const [data, setData] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -40,30 +48,30 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
 
   return (
     <div className="flex flex-col items-center w-full">
-    <div className="w-full max-w-4xl mx-auto bg-slate-900/90 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900/90 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
       
       {/* Background Grid */}
       <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
           <div className="absolute inset-0 bg-grid-slate-700/[0.2]" />
       </div>
       
-      <div className="relative z-10 flex flex-col gap-8">
-        <div className="flex justify-between items-center border-b border-slate-700 pb-4">
+      <div className={`relative z-10 flex flex-col ${isMobile ? 'gap-4' : 'gap-8'}`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row justify-between'} items-center border-b border-slate-700 pb-4`}>
           <div className="flex items-center gap-4 relative">
              <div className="relative">
-                <BounceAvatar className="w-12 h-12" />
+                <BounceAvatar className={isMobile ? 'w-10 h-10' : 'w-12 h-12'} />
              </div>
-             <h3 className="text-xl font-mono text-cyan-400">Level 1: Client-Server Architecture</h3>
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-cyan-400`}>{isMobile ? 'Client-Server' : 'Level 1: Client-Server Architecture'}</h3>
           </div>
           <div className="flex gap-2">
             <button onClick={onShowCode} className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-cyan-400 transition-colors">
                 <Code2 size={14} /> Show Code
             </button>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">The Basics</span>
+            {!isMobile && <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">The Basics</span>}
           </div>
         </div>
 
-        <div className="flex justify-between items-center h-64 px-10 relative">
+        <div className={`flex ${isMobile ? 'flex-col gap-6' : 'flex-row justify-between'} items-center ${isMobile ? 'h-auto py-4' : 'h-64'} ${isMobile ? 'px-2' : 'px-10'} relative`}>
           
           {/* CLIENT */}
           <div className="flex flex-col items-center gap-4 z-20 relative">
@@ -72,12 +80,12 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
             {!hasInteracted && requestStatus === 'idle' && (
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce z-50 pointer-events-none">
                     <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded-full mb-1 whitespace-nowrap font-bold">Try it!</span>
-                    <MousePointerClick className="text-blue-500 fill-blue-500" size={20} />
+                    <MousePointerClick className="text-blue-500 fill-blue-500" size={isMobile ? 16 : 20} />
                 </div>
             )}
 
-            <div className={`p-4 rounded-2xl transition-all duration-300 ${requestStatus === 'done' ? 'bg-green-500/20 border-green-500 shadow-green-500/50' : 'bg-slate-800 border-slate-600'}`}>
-               <Laptop size={64} className="text-slate-200" />
+            <div className={`${isMobile ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-300 ${requestStatus === 'done' ? 'bg-green-500/20 border-green-500 shadow-green-500/50' : 'bg-slate-800 border-slate-600'}`}>
+               <Laptop size={isMobile ? 48 : 64} className="text-slate-200" />
             </div>
             <button 
               onClick={handleRequest}
@@ -90,8 +98,8 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
 
           {/* NETWORK ANIMATION */}
-          <div className="flex-1 h-full relative mx-8">
-            <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-700 -translate-y-1/2 rounded-full"></div>
+          <div className={`${isMobile ? 'w-full h-16' : 'flex-1 h-full'} relative ${isMobile ? 'my-2' : 'mx-8'}`}>
+            <div className={`absolute ${isMobile ? 'top-1/2 left-0 right-0 h-1' : 'top-1/2 left-0 right-0 h-1'} bg-slate-700 -translate-y-1/2 rounded-full`}></div>
             
             {/* Request Packet */}
             {requestStatus === 'sending' && (
@@ -116,8 +124,8 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
 
           {/* SERVER */}
           <div className="flex flex-col items-center gap-4 z-20">
-             <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${requestStatus === 'processing' ? 'bg-purple-500/20 border-purple-500 animate-pulse shadow-[0_0_30px_rgba(168,85,247,0.4)]' : 'bg-slate-800 border-slate-600'}`}>
-               <Database size={64} className="text-slate-200" />
+             <div className={`${isMobile ? 'p-3' : 'p-4'} rounded-2xl border-2 transition-all duration-300 ${requestStatus === 'processing' ? 'bg-purple-500/20 border-purple-500 animate-pulse shadow-[0_0_30px_rgba(168,85,247,0.4)]' : 'bg-slate-800 border-slate-600'}`}>
+               <Database size={isMobile ? 48 : 64} className="text-slate-200" />
             </div>
             <div className="h-9 flex items-center">
                 {requestStatus === 'processing' && <span className="text-xs text-purple-400 animate-bounce">Querying DB...</span>}
@@ -128,7 +136,7 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
         </div>
 
         {/* LOGS / CONSOLE */}
-        <div className="bg-black/50 rounded-lg p-4 font-mono text-sm h-32 overflow-y-auto border border-slate-800">
+        <div className={`bg-black/50 rounded-lg ${isMobile ? 'p-3' : 'p-4'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} ${isMobile ? 'h-24' : 'h-32'} overflow-y-auto border border-slate-800`}>
            <div className="text-slate-500 mb-2"># Server Logs</div>
            {requestStatus !== 'idle' && (
              <>

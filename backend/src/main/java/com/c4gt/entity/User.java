@@ -30,6 +30,12 @@ public class User {
     @Column
     private String googleId; // For OAuth integration
     
+    @Column
+    private String passwordHash; // Hashed password for email/password auth
+    
+    @Column
+    private boolean emailVerified = false; // Email verification status
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     

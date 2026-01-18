@@ -11,6 +11,14 @@ export const ConsistentHashingDemo: React.FC<Props> = ({ onShowCode }) => {
   const [nodes, setNodes] = useState([0, 120, 240]); // Angles on the circle
   const [keys, setKeys] = useState<number[]>([]); 
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   useEffect(() => {
       // Seed random keys
       const initialKeys = Array.from({length: 12}, () => Math.floor(Math.random() * 360));
@@ -39,12 +47,12 @@ export const ConsistentHashingDemo: React.FC<Props> = ({ onShowCode }) => {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between'} items-center border-b border-slate-700 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-purple-400 flex items-center gap-2">
-                <Database /> Consistent Hashing Ring
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-purple-400 flex items-center gap-2`}>
+                <Database size={isMobile ? 16 : 24} /> {isMobile ? 'Consistent Hashing' : 'Consistent Hashing Ring'}
              </h3>
           </div>
           <div className="flex gap-2">
@@ -54,25 +62,25 @@ export const ConsistentHashingDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
        </div>
 
-       <div className="grid grid-cols-2 gap-8 h-80">
+       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-8'} ${isMobile ? 'h-auto' : 'h-80'}`}>
            
            {/* Visualizer */}
-           <div className="col-span-1 flex items-center justify-center relative">
+           <div className={`${isMobile ? '' : 'col-span-1'} flex items-center justify-center relative ${isMobile ? 'py-4' : ''}`}>
                {/* Ring */}
-               <div className="w-64 h-64 border-4 border-slate-700 rounded-full relative">
+               <div className={`${isMobile ? 'w-48 h-48' : 'w-64 h-64'} border-4 border-slate-700 rounded-full relative`}>
                    
                    {/* Nodes */}
                    {nodes.map((angle, i) => (
                        <div 
                          key={angle}
-                         className="absolute w-8 h-8 -ml-4 -mt-4 bg-slate-900 border-2 rounded-full flex items-center justify-center z-20 transition-all duration-500"
+                         className={`absolute ${isMobile ? 'w-6 h-6 -ml-3 -mt-3' : 'w-8 h-8 -ml-4 -mt-4'} bg-slate-900 border-2 rounded-full flex items-center justify-center z-20 transition-all duration-500`}
                          style={{ 
                              left: `${50 + 50 * Math.cos((angle - 90) * Math.PI / 180)}%`, 
                              top: `${50 + 50 * Math.sin((angle - 90) * Math.PI / 180)}%`,
                              borderColor: colors[i % colors.length]
                          }}
                        >
-                           <Server size={14} style={{ color: colors[i % colors.length] }} />
+                           <Server size={isMobile ? 10 : 14} style={{ color: colors[i % colors.length] }} />
                        </div>
                    ))}
 
@@ -97,10 +105,10 @@ export const ConsistentHashingDemo: React.FC<Props> = ({ onShowCode }) => {
            </div>
 
            {/* Controls & Explanation */}
-           <div className="col-span-1 flex flex-col justify-center">
-               <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-6">
-                   <h4 className="text-sm font-bold text-white mb-2">Why use this?</h4>
-                   <p className="text-xs text-slate-400 leading-relaxed">
+           <div className={`${isMobile ? '' : 'col-span-1'} flex flex-col justify-center`}>
+               <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-xl border border-slate-700 ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                   <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-white mb-2`}>Why use this?</h4>
+                   <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-400 leading-relaxed`}>
                        In standard hashing (Hash % N), adding a server changes N, forcing <b>ALL</b> keys to move. 
                        <br/><br/>
                        In <b>Consistent Hashing</b>, keys map to the nearest clockwise node. Adding a node only takes keys from its neighbor. 
@@ -110,15 +118,15 @@ export const ConsistentHashingDemo: React.FC<Props> = ({ onShowCode }) => {
                </div>
 
                <div className="flex gap-4">
-                   <button onClick={addNode} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold flex items-center justify-center gap-2">
-                       <Plus size={16} /> Add Node
+                   <button onClick={addNode} className={`flex-1 bg-green-600 hover:bg-green-500 text-white ${isMobile ? 'py-1.5 text-sm' : 'py-2'} rounded font-bold flex items-center justify-center gap-2`}>
+                       <Plus size={isMobile ? 14 : 16} /> Add Node
                    </button>
-                   <button onClick={removeNode} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold flex items-center justify-center gap-2">
-                       <Minus size={16} /> Remove Node
+                   <button onClick={removeNode} className={`flex-1 bg-red-600 hover:bg-red-500 text-white ${isMobile ? 'py-1.5 text-sm' : 'py-2'} rounded font-bold flex items-center justify-center gap-2`}>
+                       <Minus size={isMobile ? 14 : 16} /> Remove Node
                    </button>
                </div>
                
-               <div className="mt-4 text-center text-xs text-slate-500">
+               <div className={`mt-4 text-center ${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-500`}>
                    Nodes: {nodes.length} | Keys: {keys.length}
                </div>
            </div>

@@ -164,29 +164,41 @@ end`
 
 export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
   const [selected, setSelected] = useState<Language>('node');
+  const [isMobile, setIsMobile] = useState(false);
   const lang = LANGUAGES[selected];
 
+  React.useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setIsMobile(width < 768 || height < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
-    <div className="w-full max-w-6xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
-          <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-white flex items-center gap-2">
-                <Terminal className="text-green-400" /> Level 0: Backend Languages
+    <div className={`w-full max-w-6xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row justify-between'} items-start border-b border-slate-700 ${isMobile ? 'pb-3 mb-4' : 'pb-4 mb-8'}`}>
+          <div className="flex items-center gap-3">
+             <BounceAvatar className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-white flex items-center gap-2`}>
+                <Terminal className="text-green-400" size={isMobile ? 16 : 20} /> Level 0: Backend Languages
              </h3>
           </div>
           <div className="flex gap-2">
-             <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
-               {lang.tagline}
+             <span className={`${isMobile ? 'text-[10px] px-2 py-0.5' : 'text-xs px-3 py-1'} text-slate-400 bg-slate-800 rounded-full uppercase tracking-wider font-bold`}>
+               {isMobile ? lang.name : lang.tagline}
              </span>
           </div>
        </div>
 
-       <div className="grid grid-cols-12 gap-6 h-[500px]">
+       <div className={`${isMobile ? 'flex flex-col gap-4' : 'grid grid-cols-12 gap-6 h-[500px]'}`}>
           
-          {/* Sidebar Selector */}
-          <div className="col-span-3 flex flex-col gap-2 border-r border-slate-800 pr-4">
-             <span className="text-xs font-bold text-slate-500 uppercase mb-2">Select Language</span>
+          {/* Sidebar Selector - Horizontal on mobile */}
+          <div className={`${isMobile ? 'flex flex-row gap-1 overflow-x-auto pb-2 -mx-2 px-2' : 'col-span-3 flex flex-col gap-2 border-r border-slate-800 pr-4'}`}>
+             {!isMobile && <span className="text-xs font-bold text-slate-500 uppercase mb-2">Select Language</span>}
              {(Object.keys(LANGUAGES) as Language[]).map((key) => {
                  const l = LANGUAGES[key];
                  const Icon = l.icon;
@@ -194,9 +206,9 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
                     <button
                       key={key}
                       onClick={() => setSelected(key)}
-                      className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${selected === key ? 'bg-slate-800 text-white border-l-4 border-blue-500' : 'text-slate-400 hover:bg-slate-800/50'}`}
+                      className={`flex items-center gap-1 ${isMobile ? 'px-2 py-1.5 text-[10px] flex-shrink-0' : 'gap-3 p-3 text-sm'} rounded-lg font-bold transition-all ${selected === key ? 'bg-slate-800 text-white border-l-4 border-blue-500' : 'text-slate-400 hover:bg-slate-800/50'}`}
                     >
-                        <Icon size={16} className={selected === key ? l.color : 'text-slate-600'} />
+                        <Icon size={isMobile ? 12 : 16} className={selected === key ? l.color : 'text-slate-600'} />
                         {l.name}
                     </button>
                  );
@@ -204,34 +216,34 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
 
           {/* Main Content Area */}
-          <div className="col-span-9 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2">
+          <div className={`${isMobile ? 'flex flex-col gap-4' : 'col-span-9 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2'}`}>
               
               {/* Header Info */}
-              <div className="flex items-start justify-between">
+              <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-start justify-between'}`}>
                  <div>
-                    <h2 className={`text-3xl font-black ${lang.color} mb-2`}>{lang.name}</h2>
-                    <p className="text-slate-300 text-sm">{lang.setup}</p>
+                    <h2 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black ${lang.color} mb-1`}>{lang.name}</h2>
+                    <p className={`text-slate-300 ${isMobile ? 'text-xs' : 'text-sm'}`}>{lang.setup}</p>
                  </div>
-                 <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 w-1/3">
-                    <span className="text-xs font-bold text-slate-500 uppercase">Best Used For</span>
-                    <div className="text-xs text-white mt-1 leading-relaxed">
+                 <div className={`bg-slate-950 ${isMobile ? 'p-2 rounded' : 'p-4 rounded-lg w-1/3'} border border-slate-800`}>
+                    <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-bold text-slate-500 uppercase`}>Best Used For</span>
+                    <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-white mt-1 leading-relaxed`}>
                        {lang.setup}
                     </div>
                  </div>
               </div>
 
               {/* Deep Dive Concepts Panel */}
-              <div className="bg-blue-900/10 border border-blue-900/30 rounded-xl p-4">
-                 <h4 className="text-sm font-bold text-blue-400 uppercase mb-3 flex items-center gap-2">
-                    <Book size={16} /> Core Concepts Explained
+              <div className={`bg-blue-900/10 border border-blue-900/30 rounded-xl ${isMobile ? 'p-3' : 'p-4'}`}>
+                 <h4 className={`${isMobile ? 'text-xs mb-2' : 'text-sm mb-3'} font-bold text-blue-400 uppercase flex items-center gap-2`}>
+                    <Book size={isMobile ? 12 : 16} /> Core Concepts Explained
                  </h4>
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`}>
                     {lang.concepts.map((concept, idx) => (
-                        <div key={idx} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50 hover:border-blue-500/30 transition-colors">
-                            <div className="text-xs font-bold text-white mb-1">{concept.title}</div>
-                            <div className="text-[11px] text-slate-400 mb-2 leading-tight">{concept.desc}</div>
-                            <div className="text-[10px] text-blue-300 italic flex gap-1">
-                                <Info size={12} className="flex-shrink-0" /> "{concept.metaphor}"
+                        <div key={idx} className={`bg-slate-800/50 ${isMobile ? 'p-2' : 'p-3'} rounded-lg border border-slate-700/50 hover:border-blue-500/30 transition-colors`}>
+                            <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-bold text-white mb-1`}>{concept.title}</div>
+                            <div className={`${isMobile ? 'text-[10px]' : 'text-[11px]'} text-slate-400 mb-1 leading-tight`}>{concept.desc}</div>
+                            <div className={`${isMobile ? 'text-[9px]' : 'text-[10px]'} text-blue-300 italic flex gap-1`}>
+                                <Info size={isMobile ? 10 : 12} className="flex-shrink-0" /> "{concept.metaphor}"
                             </div>
                         </div>
                     ))}
@@ -239,31 +251,31 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
               </div>
 
               {/* Code Snippet */}
-              <div className="flex-1 bg-black rounded-xl border border-slate-800 p-4 relative overflow-hidden group min-h-[150px]">
-                  <div className="absolute top-2 right-2 text-xs text-slate-600 font-mono">server.{selected}</div>
-                  <pre className="text-sm font-mono text-slate-300 overflow-auto custom-scrollbar h-full">
+              <div className={`bg-black rounded-xl border border-slate-800 ${isMobile ? 'p-2' : 'p-4'} relative overflow-hidden group ${isMobile ? 'min-h-[100px]' : 'flex-1 min-h-[150px]'}`}>
+                  <div className={`absolute top-2 right-2 ${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-600 font-mono`}>server.{selected}</div>
+                  <pre className={`${isMobile ? 'text-[10px]' : 'text-sm'} font-mono text-slate-300 overflow-auto custom-scrollbar h-full`}>
                       <code>{lang.code}</code>
                   </pre>
               </div>
 
               {/* Pros & Cons */}
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-green-900/10 border border-green-900/30 rounded-lg p-3">
-                    <span className="text-xs font-bold text-green-400 uppercase mb-2 block">Pros</span>
-                    <ul className="space-y-1">
+              <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-4'}`}>
+                 <div className={`bg-green-900/10 border border-green-900/30 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <span className={`${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-2'} font-bold text-green-400 uppercase block`}>Pros</span>
+                    <ul className="space-y-0.5">
                         {lang.pros.map((p, i) => (
-                            <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
-                                <span className="w-1 h-1 bg-green-500 rounded-full"></span> {p}
+                            <li key={i} className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-300 flex items-center gap-1`}>
+                                <span className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></span> {p}
                             </li>
                         ))}
                     </ul>
                  </div>
-                 <div className="bg-red-900/10 border border-red-900/30 rounded-lg p-3">
-                    <span className="text-xs font-bold text-red-400 uppercase mb-2 block">Cons</span>
-                    <ul className="space-y-1">
+                 <div className={`bg-red-900/10 border border-red-900/30 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <span className={`${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-2'} font-bold text-red-400 uppercase block`}>Cons</span>
+                    <ul className="space-y-0.5">
                         {lang.cons.map((c, i) => (
-                            <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
-                                <span className="w-1 h-1 bg-red-500 rounded-full"></span> {c}
+                            <li key={i} className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-300 flex items-center gap-1`}>
+                                <span className="w-1 h-1 bg-red-500 rounded-full flex-shrink-0"></span> {c}
                             </li>
                         ))}
                     </ul>

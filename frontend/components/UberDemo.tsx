@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Navigation, Car, Code2, MousePointerClick } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -8,6 +8,14 @@ interface Props {
 }
 
 export const UberDemo: React.FC<Props> = ({ onShowCode }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [drivers, setDrivers] = useState<{id: number, top: number, left: number}[]>([
       {id: 1, top: 20, left: 20},
       {id: 2, top: 80, left: 30},
@@ -31,26 +39,26 @@ export const UberDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl relative ${isMobile ? 'p-3' : 'p-6'}`}>
+       <div className={`flex justify-between items-center border-b border-white/10 ${isMobile ? 'pb-2 mb-4 flex-col gap-2' : 'pb-4 mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                <Car className="text-white" /> Case Study: Uber
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`font-bold tracking-tight text-white flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-lg'}`}>
+                <Car className="text-white" size={isMobile ? 16 : 24} /> Case Study: Uber
              </h3>
           </div>
           <div className="flex gap-2">
             <button onClick={onShowCode} className="flex items-center gap-1 text-[10px] bg-white text-black hover:bg-zinc-200 border border-transparent px-3 py-1 rounded-full transition-colors font-bold uppercase tracking-wide">
                 <Code2 size={12} /> Show Code
             </button>
-            <span className="text-[10px] text-zinc-400 border border-white/10 px-2 py-1 rounded-full uppercase tracking-wide">Quadtree Index</span>
+            {!isMobile && <span className="text-[10px] text-zinc-400 border border-white/10 px-2 py-1 rounded-full uppercase tracking-wide">Quadtree Index</span>}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 h-80">
+        <div className={`grid gap-8 ${isMobile ? 'grid-cols-1 h-auto' : 'grid-cols-2 h-80'}`}>
             
             {/* Map Visualization */}
-            <div className="col-span-1 relative bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden group">
+            <div className={`relative bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden group ${isMobile ? 'h-48' : 'col-span-1'}`}>
                 {/* Grid Lines (Quadtree visualization) */}
                 <div className="absolute inset-0 flex flex-col">
                     <div className="flex-1 border-b border-zinc-800/50 flex">
@@ -89,7 +97,7 @@ export const UberDemo: React.FC<Props> = ({ onShowCode }) => {
             </div>
 
             {/* Controls */}
-            <div className="col-span-1 flex flex-col justify-center gap-6 relative">
+            <div className={`flex flex-col justify-center relative ${isMobile ? 'gap-4' : 'col-span-1 gap-6'}`}>
                 
                  {/* NUDGE */}
                  {!hasInteracted && (

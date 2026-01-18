@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GitBranch, Database, ArrowUp, ArrowDown, FileText, Code2 } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -8,6 +8,14 @@ interface Props {
 }
 
 export const DbMigrationDemo: React.FC<Props> = ({ onShowCode }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [version, setVersion] = useState(1);
   const maxVersion = 3;
 
@@ -20,12 +28,12 @@ export const DbMigrationDemo: React.FC<Props> = ({ onShowCode }) => {
   const current = versions[version - 1];
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl border border-slate-700 shadow-2xl relative ${isMobile ? 'p-4' : 'p-8'}`}>
+       <div className={`flex justify-between items-center border-b border-slate-700 ${isMobile ? 'pb-2 mb-4 flex-col gap-2' : 'pb-4 mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-cyan-400 flex items-center gap-2">
-                <GitBranch /> Database Migrations (Alembic)
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`font-mono text-cyan-400 flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-xl'}`}>
+                <GitBranch size={isMobile ? 16 : 24} /> {isMobile ? 'DB Migrations' : 'Database Migrations (Alembic)'}
              </h3>
           </div>
           <div className="flex gap-2">
@@ -35,10 +43,10 @@ export const DbMigrationDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
        </div>
 
-       <div className="grid grid-cols-2 gap-12 h-64">
+       <div className={`grid ${isMobile ? 'grid-cols-1 gap-6 h-auto' : 'grid-cols-2 gap-12 h-64'}`}>
            
            {/* Timeline Control */}
-           <div className="col-span-1 flex flex-col justify-center gap-4 relative pl-8 border-r border-slate-700">
+           <div className={`flex flex-col justify-center gap-4 relative pl-8 ${isMobile ? 'border-b pb-6 border-slate-700' : 'col-span-1 border-r border-slate-700'}`}>
                <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-800 rounded-full"></div>
                
                {versions.map((v) => (
@@ -56,7 +64,7 @@ export const DbMigrationDemo: React.FC<Props> = ({ onShowCode }) => {
            </div>
 
            {/* Current Schema State */}
-           <div className="col-span-1 flex flex-col justify-between">
+           <div className={`flex flex-col justify-between ${isMobile ? '' : 'col-span-1'}`}>
                <div className="bg-[#1e1e1e] p-6 rounded-xl border border-slate-700 shadow-xl flex-1 flex flex-col relative overflow-hidden">
                    <div className="absolute top-2 right-2 text-slate-600">
                        <Database size={64} opacity={0.1} />

@@ -44,7 +44,7 @@ import { QuizModal } from './components/QuizModal';
 import { ProfileModal } from './components/ProfileModal';
 import { Position, GameState, Obstacle, CodeSnippet } from './types';
 import { COURSE_CONTENT } from './data/courseContent';
-import { ArrowRight, MessageCircle, Map, X, GraduationCap, Home, ArrowUp, ArrowDown, ArrowLeft, User } from 'lucide-react';
+import { ArrowRight, MessageCircle, Map, X, GraduationCap, Home, ArrowUp, ArrowDown, ArrowLeft, User, RotateCw } from 'lucide-react';
 
 const MOVEMENT_SPEED = 12;
 const AVATAR_SIZE = 48;
@@ -73,7 +73,36 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   const keysPressed = useRef<Set<string>>(new Set());
-  const virtualKeys = useRef<Set<string>>(new Set()); 
+  const virtualKeys = useRef<Set<string>>(new Set());
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // --- ORIENTATION DETECTION ---
+  useEffect(() => {
+    const checkOrientation = () => {
+      // Check if mobile: either width OR height is less than 768px
+      // This works in both portrait and landscape
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const mobile = width < 768 || height < 768;
+      const isPortrait = height > width;
+      setIsMobile(mobile);
+      setIsPortraitMobile(mobile && isPortrait);
+    };
+    
+    checkOrientation();
+    // Use a small delay for orientation change to ensure accurate dimensions
+    const handleOrientationChange = () => {
+      setTimeout(checkOrientation, 100);
+    };
+    
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
 
   // --- STATE PERSISTENCE LOGIC ---
   useEffect(() => {
@@ -327,41 +356,43 @@ export default function App() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
       {/* Header UI */}
-      <div className="fixed top-0 left-0 w-full p-6 z-50 pointer-events-none flex justify-between items-start">
+      <div className={`fixed top-0 left-0 w-full ${isMobile ? 'p-3' : 'p-6'} z-50 pointer-events-none flex justify-between items-start`}>
         <div className="pointer-events-auto">
-           <h1 className="text-3xl font-bold tracking-tighter text-white flex items-center gap-2 cursor-pointer" onClick={() => setViewState('HOME')}>
-             CURIOUS<span className="text-zinc-500 text-lg font-normal tracking-wide">.SYS</span>
+           <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold tracking-tighter text-white flex items-center gap-1 cursor-pointer`} onClick={() => setViewState('HOME')}>
+             CURIOUS<span className={`text-zinc-500 ${isMobile ? 'text-sm' : 'text-lg'} font-normal tracking-wide`}>.SYS</span>
            </h1>
-           <p className="text-zinc-500 text-xs font-medium tracking-wide pl-0.5">
-             FULL STACK ARCHITECTURE
-           </p>
+           {!isMobile && (
+             <p className="text-zinc-500 text-xs font-medium tracking-wide pl-0.5">
+               FULL STACK ARCHITECTURE
+             </p>
+           )}
            
-           <div className="flex gap-2 mt-4">
-               <button onClick={() => setViewState('HOME')} className="text-[10px] uppercase tracking-widest flex items-center gap-2 text-zinc-400 hover:text-white transition-colors bg-zinc-900/80 px-4 py-2 rounded-lg border border-white/5 hover:border-white/20">
-                 <Home size={10} /> Home
+           <div className={`flex gap-2 ${isMobile ? 'mt-2' : 'mt-4'}`}>
+               <button onClick={() => setViewState('HOME')} className={`${isMobile ? 'text-[8px] px-2 py-1' : 'text-[10px] px-4 py-2'} uppercase tracking-widest flex items-center gap-1 text-zinc-400 hover:text-white transition-colors bg-zinc-900/80 rounded-lg border border-white/5 hover:border-white/20`}>
+                 <Home size={isMobile ? 8 : 10} /> Home
                </button>
-               <button onClick={() => setShowRoadmap(true)} className="text-[10px] uppercase tracking-widest flex items-center gap-2 text-zinc-400 hover:text-white transition-colors bg-zinc-900/80 px-4 py-2 rounded-lg border border-white/5 hover:border-white/20">
-                 <Map size={10} /> Roadmap
+               <button onClick={() => setShowRoadmap(true)} className={`${isMobile ? 'text-[8px] px-2 py-1' : 'text-[10px] px-4 py-2'} uppercase tracking-widest flex items-center gap-1 text-zinc-400 hover:text-white transition-colors bg-zinc-900/80 rounded-lg border border-white/5 hover:border-white/20`}>
+                 <Map size={isMobile ? 8 : 10} /> Roadmap
                </button>
            </div>
         </div>
         
-        <div className="flex gap-3 pointer-events-auto">
-             <div className="bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-lg font-mono text-[10px] uppercase tracking-widest text-zinc-400 shadow-xl flex items-center">
-                <span className="text-white font-bold mr-2">Level {currentLevelIndex + 1}</span> {COURSE_CONTENT[currentLevelIndex]?.title}
+        <div className="flex gap-2 pointer-events-auto items-center">
+             <div className={`bg-black/80 backdrop-blur-md border border-white/10 ${isMobile ? 'px-2 py-1' : 'px-4 py-2'} rounded-lg font-mono ${isMobile ? 'text-[8px]' : 'text-[10px]'} uppercase tracking-widest text-zinc-400 shadow-xl flex items-center`}>
+                <span className="text-white font-bold mr-1">Level {currentLevelIndex + 1}</span> {!isMobile && COURSE_CONTENT[currentLevelIndex]?.title}
             </div>
             
             {currentUser && (
                 <button 
                   onClick={() => setShowProfile(true)}
-                  className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 w-9 h-9 rounded-full flex items-center justify-center transition-colors shadow-lg group relative"
+                  className={`bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 ${isMobile ? 'w-7 h-7' : 'w-9 h-9'} rounded-full flex items-center justify-center transition-colors shadow-lg group relative`}
                 >
                     <img src={currentUser.avatar} alt="Profile" className="w-full h-full rounded-full opacity-80 group-hover:opacity-100" />
                 </button>
             )}
             {!currentUser && (
-                <button className="bg-zinc-900/50 border border-zinc-800 w-9 h-9 rounded-full flex items-center justify-center text-zinc-600 cursor-not-allowed">
-                    <User size={14} />
+                <button className={`bg-zinc-900/50 border border-zinc-800 ${isMobile ? 'w-7 h-7' : 'w-9 h-9'} rounded-full flex items-center justify-center text-zinc-600 cursor-not-allowed`}>
+                    <User size={isMobile ? 12 : 14} />
                 </button>
             )}
         </div>
@@ -415,6 +446,16 @@ export default function App() {
 
       {gameState === GameState.PLAYGROUND && (
         <>
+          {/* Portrait Mode Notification */}
+          {isPortraitMobile && (
+            <div className="fixed top-0 left-0 w-full bg-yellow-600/90 backdrop-blur-md text-white px-4 py-3 z-[200] flex items-center justify-center gap-3 shadow-lg animate-in slide-in-from-top-full duration-500">
+              <RotateCw size={18} className="animate-spin duration-[3000ms]" />
+              <span className="text-xs font-bold tracking-wide text-center">
+                For the best experience, please rotate your device to landscape.
+              </span>
+            </div>
+          )}
+
           <div className="hidden md:flex absolute bottom-20 left-10 max-w-xs text-zinc-500 text-xs pointer-events-none font-mono z-0 flex-col gap-2">
              <div className="flex items-center">
                 USE <span className="text-white border border-zinc-700 px-1 rounded mx-1">ARROWS</span> TO MOVE
@@ -424,46 +465,50 @@ export default function App() {
              </div>
           </div>
 
-          <div className="fixed bottom-8 left-8 z-[150] md:hidden flex flex-col items-center gap-2 select-none touch-none">
-             <button 
-                className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center active:bg-white/30 text-white touch-none"
-                onTouchStart={handleTouchStart('ArrowUp')}
-                onTouchEnd={handleTouchEnd('ArrowUp')}
-                onMouseDown={handleTouchStart('ArrowUp')}
-                onMouseUp={handleTouchEnd('ArrowUp')}
-             >
-                <ArrowUp size={24} />
-             </button>
-             <div className="flex gap-4">
-                <button 
-                    className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center active:bg-white/30 text-white touch-none"
-                    onTouchStart={handleTouchStart('ArrowLeft')}
-                    onTouchEnd={handleTouchEnd('ArrowLeft')}
-                    onMouseDown={handleTouchStart('ArrowLeft')}
-                    onMouseUp={handleTouchEnd('ArrowLeft')}
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                <button 
-                    className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center active:bg-white/30 text-white touch-none"
-                    onTouchStart={handleTouchStart('ArrowDown')}
-                    onTouchEnd={handleTouchEnd('ArrowDown')}
-                    onMouseDown={handleTouchStart('ArrowDown')}
-                    onMouseUp={handleTouchEnd('ArrowDown')}
-                >
-                    <ArrowDown size={24} />
-                </button>
-                <button 
-                    className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center active:bg-white/30 text-white touch-none"
-                    onTouchStart={handleTouchStart('ArrowRight')}
-                    onTouchEnd={handleTouchEnd('ArrowRight')}
-                    onMouseDown={handleTouchStart('ArrowRight')}
-                    onMouseUp={handleTouchEnd('ArrowRight')}
-                >
-                    <ArrowRight size={24} />
-                </button>
-             </div>
-          </div>
+          {/* Mobile Game Controls - Always visible on mobile (portrait and landscape) */}
+          {/* Using isMobile state for reliable detection in both orientations */}
+          {isMobile && (
+            <div className="fixed bottom-4 left-4 z-[150] flex flex-col items-center gap-1 select-none touch-none">
+               <button 
+                  className="w-12 h-12 bg-zinc-900/80 backdrop-blur-md rounded-full border border-white/30 flex items-center justify-center active:bg-white/30 active:scale-95 text-white touch-none shadow-lg transition-transform"
+                  onTouchStart={handleTouchStart('ArrowUp')}
+                  onTouchEnd={handleTouchEnd('ArrowUp')}
+                  onMouseDown={handleTouchStart('ArrowUp')}
+                  onMouseUp={handleTouchEnd('ArrowUp')}
+               >
+                  <ArrowUp size={20} />
+               </button>
+               <div className="flex gap-2">
+                  <button 
+                      className="w-12 h-12 bg-zinc-900/80 backdrop-blur-md rounded-full border border-white/30 flex items-center justify-center active:bg-white/30 active:scale-95 text-white touch-none shadow-lg transition-transform"
+                      onTouchStart={handleTouchStart('ArrowLeft')}
+                      onTouchEnd={handleTouchEnd('ArrowLeft')}
+                      onMouseDown={handleTouchStart('ArrowLeft')}
+                      onMouseUp={handleTouchEnd('ArrowLeft')}
+                  >
+                      <ArrowLeft size={20} />
+                  </button>
+                  <button 
+                      className="w-12 h-12 bg-zinc-900/80 backdrop-blur-md rounded-full border border-white/30 flex items-center justify-center active:bg-white/30 active:scale-95 text-white touch-none shadow-lg transition-transform"
+                      onTouchStart={handleTouchStart('ArrowDown')}
+                      onTouchEnd={handleTouchEnd('ArrowDown')}
+                      onMouseDown={handleTouchStart('ArrowDown')}
+                      onMouseUp={handleTouchEnd('ArrowDown')}
+                  >
+                      <ArrowDown size={20} />
+                  </button>
+                  <button 
+                      className="w-12 h-12 bg-zinc-900/80 backdrop-blur-md rounded-full border border-white/30 flex items-center justify-center active:bg-white/30 active:scale-95 text-white touch-none shadow-lg transition-transform"
+                      onTouchStart={handleTouchStart('ArrowRight')}
+                      onTouchEnd={handleTouchEnd('ArrowRight')}
+                      onMouseDown={handleTouchStart('ArrowRight')}
+                      onMouseUp={handleTouchEnd('ArrowRight')}
+                  >
+                      <ArrowRight size={20} />
+                  </button>
+               </div>
+            </div>
+          )}
 
           {OBSTACLES.map(obs => (
             <div 
@@ -476,12 +521,12 @@ export default function App() {
           ))}
 
           {/* NEW: Large Background Level Number */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30vw] font-black text-white/5 pointer-events-none select-none z-0 tracking-tighter">
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? 'text-[40vw]' : 'text-[30vw]'} font-black text-white/5 pointer-events-none select-none z-0 tracking-tighter`}>
              {(currentLevelIndex + 1).toString().padStart(2, '0')}
           </div>
 
-          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center border-l border-white/5 backdrop-blur-sm">
-             <div className="text-white font-mono text-xs rotate-90 whitespace-nowrap tracking-[0.3em] font-bold opacity-70">
+          <div className={`absolute top-0 bottom-0 right-0 ${isMobile ? 'w-20' : 'w-32'} bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center border-l border-white/5 backdrop-blur-sm`}>
+             <div className={`text-white font-mono ${isMobile ? 'text-[10px]' : 'text-xs'} rotate-90 whitespace-nowrap tracking-[0.3em] font-bold opacity-70`}>
                 ENTER ZONE
              </div>
           </div>
@@ -489,27 +534,36 @@ export default function App() {
       )}
 
       {gameState !== GameState.PLAYGROUND && (
-         <div className="absolute inset-0 flex flex-col items-center justify-start pt-20 pb-20 bg-zinc-950/95 z-40 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar">
+         <div className={`absolute inset-0 flex flex-col items-center justify-start ${isMobile ? 'pt-16 pb-16' : 'pt-20 pb-20'} bg-zinc-950/95 z-40 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar`}>
+             {/* Portrait Mode Notification */}
+             {isPortraitMobile && (
+               <div className="fixed top-0 left-0 w-full bg-yellow-600/90 backdrop-blur-md text-white px-3 py-2 z-[200] flex items-center justify-center gap-2 shadow-lg animate-in slide-in-from-top-full duration-500">
+                 <RotateCw size={14} className="animate-spin duration-[3000ms]" />
+                 <span className="text-[10px] font-bold tracking-wide text-center">
+                   For the best experience, rotate to landscape
+                 </span>
+               </div>
+             )}
              <button 
                onClick={handleLevelComplete}
-               className="absolute top-8 left-8 text-zinc-500 hover:text-white flex items-center gap-2 transition-colors z-50 cursor-pointer pointer-events-auto group"
+               className={`absolute ${isMobile ? 'top-4 left-4' : 'top-8 left-8'} text-zinc-500 hover:text-white flex items-center gap-1 transition-colors z-50 cursor-pointer pointer-events-auto group`}
              >
-                <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  <ArrowRight className="rotate-180" size={16} />
+                <div className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all`}>
+                  <ArrowRight className="rotate-180" size={isMobile ? 12 : 16} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wide">Back</span>
+                {!isMobile && <span className="text-xs font-bold uppercase tracking-wide">Back</span>}
              </button>
 
-             <div className="w-full max-w-4xl px-4">
+             <div className={`w-full max-w-4xl ${isMobile ? 'px-3' : 'px-4'}`}>
                 {renderLevelComponent()}
              </div>
 
-             <div className="w-full max-w-4xl px-4 mt-8 pb-10">
+             <div className={`w-full max-w-4xl ${isMobile ? 'px-3 mt-4 pb-6' : 'px-4 mt-8 pb-10'}`}>
                 <CommentSection levelId={gameState} />
              </div>
              
-             <div className="w-full flex justify-center pb-20">
-                <button onClick={handleLevelComplete} className="px-8 py-3 bg-white text-black hover:bg-zinc-200 font-bold rounded-lg transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)] text-sm tracking-wide">
+             <div className={`w-full flex justify-center ${isMobile ? 'pb-16' : 'pb-20'}`}>
+                <button onClick={handleLevelComplete} className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-8 py-3 text-sm'} bg-white text-black hover:bg-zinc-200 font-bold rounded-lg transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)] tracking-wide`}>
                   {currentLevelIndex < COURSE_CONTENT.length - 1 ? "NEXT LEVEL / QUIZ" : "RESET COURSE"}
                 </button>
              </div>
@@ -530,16 +584,16 @@ export default function App() {
         </div>
       )}
 
-      <div className="fixed bottom-8 right-8 z-[200] flex flex-col items-end">
+      <div className={`fixed ${isMobile ? 'bottom-4 right-4' : 'bottom-8 right-8'} z-[200] flex flex-col items-end`}>
          <div className="relative">
             <ChatBubble isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
          </div>
 
          <button 
            onClick={() => setIsChatOpen(!isChatOpen)}
-           className="bg-white hover:bg-zinc-200 text-black p-4 rounded-full shadow-2xl transition-transform hover:scale-110 border border-zinc-400 flex items-center justify-center"
+           className={`bg-white hover:bg-zinc-200 text-black ${isMobile ? 'p-3' : 'p-4'} rounded-full shadow-2xl transition-transform hover:scale-110 border border-zinc-400 flex items-center justify-center`}
          >
-           {isChatOpen ? <X size={20} /> : <MessageCircle size={20} />}
+           {isChatOpen ? <X size={isMobile ? 16 : 20} /> : <MessageCircle size={isMobile ? 16 : 20} />}
          </button>
       </div>
 

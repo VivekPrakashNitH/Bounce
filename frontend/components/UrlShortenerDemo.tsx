@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Database, ArrowRight, Code2 } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -11,6 +11,14 @@ export const UrlShortenerDemo: React.FC<Props> = ({ onShowCode }) => {
   const [shortUrl, setShortUrl] = useState('');
   const [db, setDb] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const generateShortUrl = () => {
      if (!longUrl) return;
@@ -28,12 +36,12 @@ export const UrlShortenerDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl ${isMobile ? 'p-4' : 'p-6'} border border-white/10 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between'} items-center border-b border-white/10 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                <Link className="text-white" /> Case Study: URL Shortener
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold tracking-tight text-white flex items-center gap-2`}>
+                <Link className="text-white" size={isMobile ? 16 : 24} /> {isMobile ? 'URL Shortener' : 'Case Study: URL Shortener'}
              </h3>
           </div>
           <div className="flex gap-2">
@@ -44,7 +52,7 @@ export const UrlShortenerDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-8'}`}>
             <div className="flex flex-col gap-4">
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Enter Long URL</label>
                 <div className="flex gap-2">
@@ -67,11 +75,11 @@ export const UrlShortenerDemo: React.FC<Props> = ({ onShowCode }) => {
                 )}
             </div>
 
-            <div className="border-l border-white/5 pl-8">
+            <div className={`${isMobile ? 'border-t pt-4' : 'border-l pl-8'} border-white/5`}>
                 <div className="flex items-center gap-2 mb-4 text-white font-bold text-sm">
                     <Database size={16} /> Database (Mapping)
                 </div>
-                <div className="h-40 overflow-y-auto custom-scrollbar bg-black/20 rounded-xl p-3 border border-white/5">
+                <div className={`${isMobile ? 'h-32' : 'h-40'} overflow-y-auto custom-scrollbar bg-black/20 rounded-xl p-3 border border-white/5`}>
                     {Object.entries(db).length === 0 && <div className="text-zinc-600 text-xs italic text-center mt-10">Database empty...</div>}
                     {Object.entries(db).map(([hash, url]) => (
                         <div key={hash} className="text-xs font-mono mb-2 p-2 bg-zinc-900 rounded border border-zinc-800 break-all">

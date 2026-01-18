@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Code2, Play, CheckCircle, UploadCloud, Activity, Eye, Server } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -8,27 +8,35 @@ interface Props {
 }
 
 export const DevOpsLoopDemo: React.FC<Props> = ({ onShowCode }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative overflow-hidden">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8 relative z-10">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl border border-slate-700 shadow-2xl relative overflow-hidden ${isMobile ? 'p-4' : 'p-8'}`}>
+       <div className={`flex justify-between items-center border-b border-slate-700 relative z-10 ${isMobile ? 'pb-2 mb-4 flex-col gap-2' : 'pb-4 mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-cyan-400 flex items-center gap-2">
-                <Activity /> The DevOps Infinity Loop
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`font-mono text-cyan-400 flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-xl'}`}>
+                <Activity size={isMobile ? 16 : 24} /> {isMobile ? 'DevOps Loop' : 'The DevOps Infinity Loop'}
              </h3>
           </div>
           <div className="flex gap-2">
             <button onClick={onShowCode} className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-cyan-400 transition-colors">
                 <Code2 size={14} /> Show Workflow
             </button>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">CI/CD Automation</span>
+            {!isMobile && <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">CI/CD Automation</span>}
           </div>
        </div>
 
-       <div className="relative h-[300px] flex items-center justify-center">
+       <div className={`relative flex items-center justify-center ${isMobile ? 'h-[200px]' : 'h-[300px]'}`}>
            
            {/* The Infinity Path SVG */}
-           <svg width="600" height="200" viewBox="0 0 600 200" className="opacity-30">
+           <svg width={isMobile ? 300 : 600} height={isMobile ? 100 : 200} viewBox="0 0 600 200" className="opacity-30">
                {/* 
                    A simple infinity shape approximation:
                    M 300 100 
@@ -51,16 +59,16 @@ export const DevOpsLoopDemo: React.FC<Props> = ({ onShowCode }) => {
 
            {/* Labels along the path */}
            {/* Left Loop (Dev) */}
-           <div className="absolute left-[15%] top-[10%] text-xs font-bold text-blue-400 flex flex-col items-center"><Settings size={16}/> PLAN</div>
-           <div className="absolute left-[5%] top-[50%] text-xs font-bold text-blue-400 flex flex-col items-center"><Code2 size={16}/> CODE</div>
-           <div className="absolute left-[15%] bottom-[10%] text-xs font-bold text-blue-400 flex flex-col items-center"><Play size={16}/> BUILD</div>
-           <div className="absolute left-[35%] bottom-[15%] text-xs font-bold text-blue-400 flex flex-col items-center"><CheckCircle size={16}/> TEST</div>
+           <div className={`absolute left-[15%] top-[10%] font-bold text-blue-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Settings size={isMobile ? 12 : 16}/> PLAN</div>
+           <div className={`absolute left-[5%] top-[50%] font-bold text-blue-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Code2 size={isMobile ? 12 : 16}/> CODE</div>
+           <div className={`absolute left-[15%] bottom-[10%] font-bold text-blue-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Play size={isMobile ? 12 : 16}/> BUILD</div>
+           <div className={`absolute left-[35%] bottom-[15%] font-bold text-blue-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><CheckCircle size={isMobile ? 12 : 16}/> TEST</div>
 
            {/* Right Loop (Ops) */}
-           <div className="absolute right-[35%] top-[15%] text-xs font-bold text-green-400 flex flex-col items-center"><UploadCloud size={16}/> RELEASE</div>
-           <div className="absolute right-[15%] top-[10%] text-xs font-bold text-green-400 flex flex-col items-center"><Server size={16}/> DEPLOY</div>
-           <div className="absolute right-[5%] top-[50%] text-xs font-bold text-green-400 flex flex-col items-center"><Settings size={16}/> OPERATE</div>
-           <div className="absolute right-[15%] bottom-[10%] text-xs font-bold text-green-400 flex flex-col items-center"><Eye size={16}/> MONITOR</div>
+           <div className={`absolute right-[35%] top-[15%] font-bold text-green-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><UploadCloud size={isMobile ? 12 : 16}/> RELEASE</div>
+           <div className={`absolute right-[15%] top-[10%] font-bold text-green-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Server size={isMobile ? 12 : 16}/> DEPLOY</div>
+           <div className={`absolute right-[5%] top-[50%] font-bold text-green-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Settings size={isMobile ? 12 : 16}/> OPERATE</div>
+           <div className={`absolute right-[15%] bottom-[10%] font-bold text-green-400 flex flex-col items-center ${isMobile ? 'text-[8px]' : 'text-xs'}`}><Eye size={isMobile ? 12 : 16}/> MONITOR</div>
 
            {/* The Moving Runner */}
            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -76,10 +84,10 @@ export const DevOpsLoopDemo: React.FC<Props> = ({ onShowCode }) => {
 
        </div>
 
-       <div className="text-center mt-6 text-sm text-slate-400 bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+       <div className={`text-center text-slate-400 bg-slate-800/50 rounded-lg border border-slate-700 ${isMobile ? 'mt-4 p-2 text-xs' : 'mt-6 p-4 text-sm'}`}>
           DevOps unifies Development (Left Loop) and Operations (Right Loop) into a continuous cycle.
           <br/>
-          <span className="text-xs text-slate-500 font-mono">
+          <span className={`text-slate-500 font-mono ${isMobile ? 'text-[8px]' : 'text-xs'}`}>
             Plan &rarr; Code &rarr; Build &rarr; Test &rarr; Release &rarr; Deploy &rarr; Operate &rarr; Monitor
           </span>
        </div>

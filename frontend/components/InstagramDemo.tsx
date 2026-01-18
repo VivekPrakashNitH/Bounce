@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Users, Database, ArrowRight, Code2, Heart, MousePointerClick } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -11,6 +11,14 @@ export const InstagramDemo: React.FC<Props> = ({ onShowCode }) => {
   const [isPosting, setIsPosting] = useState(false);
   const [feedItems, setFeedItems] = useState<number[]>([]);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handlePost = () => {
     if (isPosting) return;
@@ -25,12 +33,12 @@ export const InstagramDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl ${isMobile ? 'p-4' : 'p-6'} border border-white/10 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between'} items-center border-b border-white/10 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                <Camera className="text-pink-500" /> Case Study: Instagram
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold tracking-tight text-white flex items-center gap-2`}>
+                <Camera className="text-pink-500" size={isMobile ? 16 : 24} /> {isMobile ? 'Instagram' : 'Case Study: Instagram'}
              </h3>
           </div>
           <div className="flex gap-2">
@@ -41,9 +49,9 @@ export const InstagramDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-8">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-8'}`}>
             {/* User Posting */}
-            <div className="col-span-1 flex flex-col items-center gap-4 border-r border-white/5 pr-8 relative">
+            <div className={`col-span-1 flex flex-col items-center gap-4 ${isMobile ? 'border-b pb-4' : 'border-r pr-8'} border-white/5 relative`}>
                 
                  {/* NUDGE */}
                  {!hasInteracted && (
@@ -75,7 +83,7 @@ export const InstagramDemo: React.FC<Props> = ({ onShowCode }) => {
             </div>
 
             {/* Backend Logic */}
-            <div className="col-span-1 flex flex-col items-center justify-center gap-6 relative">
+            <div className={`col-span-1 flex ${isMobile ? 'flex-row justify-around py-4' : 'flex-col items-center justify-center'} gap-6 relative`}>
                  {/* Animation Path */}
                  {isPosting && (
                      <>
@@ -103,7 +111,7 @@ export const InstagramDemo: React.FC<Props> = ({ onShowCode }) => {
             </div>
 
             {/* Followers Feeds */}
-            <div className="col-span-1 flex flex-col gap-4 border-l border-white/5 pl-8">
+            <div className={`col-span-1 flex flex-col gap-4 ${isMobile ? 'border-t pt-4' : 'border-l pl-8'} border-white/5`}>
                 <span className="text-xs text-zinc-500 font-mono text-center">Followers' Feeds (Redis)</span>
                 {[1, 2].map((follower) => (
                     <div key={follower} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">

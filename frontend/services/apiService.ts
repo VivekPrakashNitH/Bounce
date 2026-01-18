@@ -139,4 +139,54 @@ export const authApi = {
     
     return response.json();
   },
+
+  // Email/OTP Authentication
+  async sendOtp(email: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send OTP');
+    }
+  },
+
+  async verifyOtp(email: string, otp: string, name?: string, password?: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp, name, password }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to verify OTP');
+    }
+    
+    return response.json();
+  },
+
+  async login(email: string, password: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to login');
+    }
+    
+    return response.json();
+  },
 };

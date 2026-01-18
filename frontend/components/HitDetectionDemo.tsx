@@ -12,6 +12,14 @@ export const HitDetectionDemo: React.FC<Props> = ({ onShowCode }) => {
   const [shots, setShots] = useState<{id: number, x: number, y: number, angle: number, active: boolean}[]>([]);
   const [target, setTarget] = useState({ x: 300, y: 100, hit: false });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Projectile Loop
   useEffect(() => {
@@ -72,15 +80,15 @@ export const HitDetectionDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between'} items-center border-b border-slate-700 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-green-400 flex items-center gap-2">
-                <Crosshair /> Hit Detection Math
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-green-400 flex items-center gap-2`}>
+                <Crosshair size={isMobile ? 16 : 24} /> Hit Detection Math
              </h3>
           </div>
-          <div className="flex gap-2">
+          <div className={`flex ${isMobile ? 'flex-wrap justify-center' : ''} gap-2`}>
              <button 
                 onClick={() => setMode('hitscan')}
                 className={`px-3 py-1 text-xs font-bold rounded transition-colors ${mode === 'hitscan' ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-slate-400'}`}
@@ -99,12 +107,12 @@ export const HitDetectionDemo: React.FC<Props> = ({ onShowCode }) => {
           </div>
        </div>
 
-       <div className="grid grid-cols-3 gap-8 h-80">
+       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-8'} ${isMobile ? 'h-auto' : 'h-80'}`}>
            
            {/* Game View */}
            <div 
              ref={containerRef}
-             className="col-span-2 bg-black border border-slate-700 rounded-lg relative overflow-hidden cursor-crosshair"
+             className={`${isMobile ? 'col-span-1 h-48' : 'col-span-2'} bg-black border border-slate-700 rounded-lg relative overflow-hidden cursor-crosshair`}
              onClick={fire}
            >
                <div className="absolute top-2 left-2 text-[10px] text-slate-500 font-mono">CLICK TO SHOOT</div>
@@ -151,8 +159,8 @@ export const HitDetectionDemo: React.FC<Props> = ({ onShowCode }) => {
            </div>
 
            {/* Info Panel */}
-           <div className="col-span-1 flex flex-col justify-center space-y-6">
-               <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+           <div className={`col-span-1 flex flex-col justify-center ${isMobile ? 'space-y-3' : 'space-y-6'}`}>
+               <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-xl border border-slate-700`}>
                   <h4 className="text-sm font-bold text-white mb-2">
                       {mode === 'hitscan' ? 'Raycasting (Hitscan)' : 'Physics Object (Projectile)'}
                   </h4>

@@ -11,6 +11,14 @@ export const GameArchDemo: React.FC<Props> = ({ onShowCode }) => {
   const [mode, setMode] = useState<'single' | 'multi'>('single');
   const [requests, setRequests] = useState<{id: number, x: number, processed: boolean}[]>([]);
   const [processingTime, setProcessingTime] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
      // Spawn requests
@@ -74,34 +82,34 @@ export const GameArchDemo: React.FC<Props> = ({ onShowCode }) => {
   }, [mode]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} border-b border-slate-700 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
-             <BounceAvatar className="w-10 h-10" />
-             <h3 className="text-xl font-mono text-purple-400 flex items-center gap-2">
-                <Gamepad2 /> Game Concurrency
+             <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
+             <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-purple-400 flex items-center gap-2`}>
+                <Gamepad2 size={isMobile ? 18 : 24} /> Game Concurrency
              </h3>
           </div>
           <div className="flex bg-slate-800 rounded-lg p-1">
              <button 
                 onClick={() => { setMode('single'); setRequests([]); }}
-                className={`px-3 py-1 text-xs font-bold rounded transition-colors ${mode === 'single' ? 'bg-red-500 text-white' : 'text-slate-400'}`}
+                className={`px-3 py-1 ${isMobile ? 'text-[10px]' : 'text-xs'} font-bold rounded transition-colors ${mode === 'single' ? 'bg-red-500 text-white' : 'text-slate-400'}`}
              >
-                Single Thread (Node.js)
+                Single Thread
              </button>
              <button 
                 onClick={() => { setMode('multi'); setRequests([]); }}
-                className={`px-3 py-1 text-xs font-bold rounded transition-colors ${mode === 'multi' ? 'bg-green-500 text-white' : 'text-slate-400'}`}
+                className={`px-3 py-1 ${isMobile ? 'text-[10px]' : 'text-xs'} font-bold rounded transition-colors ${mode === 'multi' ? 'bg-green-500 text-white' : 'text-slate-400'}`}
              >
-                Multi-Thread/Goroutines
+                Multi-Thread
              </button>
           </div>
        </div>
 
-       <div className="relative h-64 border border-slate-700 bg-black/40 rounded-xl overflow-hidden mb-4">
+       <div className={`relative ${isMobile ? 'h-48' : 'h-64'} border border-slate-700 bg-black/40 rounded-xl overflow-hidden mb-4`}>
            {/* Server Core */}
-           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center z-10">
-               <Server className={mode === 'single' ? 'text-red-400' : 'text-green-400'} />
+           <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? 'w-14 h-14' : 'w-20 h-20'} bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center z-10`}>
+               <Server size={isMobile ? 18 : 24} className={mode === 'single' ? 'text-red-400' : 'text-green-400'} />
                <span className="text-[10px] text-slate-300 mt-1">{mode === 'single' ? '1 Core' : 'N Cores'}</span>
            </div>
 
@@ -109,31 +117,31 @@ export const GameArchDemo: React.FC<Props> = ({ onShowCode }) => {
            {requests.map(r => (
                <div 
                  key={r.id}
-                 className={`absolute top-1/2 w-4 h-4 rounded-full shadow-[0_0_10px_currentColor] transition-colors ${r.processed ? 'bg-green-400 text-green-400' : 'bg-blue-500 text-blue-500'}`}
+                 className={`absolute top-1/2 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full shadow-[0_0_10px_currentColor] transition-colors ${r.processed ? 'bg-green-400 text-green-400' : 'bg-blue-500 text-blue-500'}`}
                  style={{ left: `${r.x}%`, transform: 'translate(-50%, -50%)' }}
                >
-                   <User size={10} className="text-black absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                   <User size={isMobile ? 8 : 10} className="text-black absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                </div>
            ))}
 
            {/* Labels */}
-           <div className="absolute left-4 top-4 text-xs text-slate-500">Clients (Players)</div>
-           <div className="absolute right-4 top-4 text-xs text-slate-500">Processed</div>
+           <div className={`absolute left-4 top-4 ${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-500`}>Clients</div>
+           <div className={`absolute right-4 top-4 ${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-500`}>Processed</div>
        </div>
 
-       <div className="grid grid-cols-2 gap-4">
-           <div className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-               <h4 className="text-sm font-bold text-white mb-2">Single Threaded (Node.js)</h4>
-               <p className="text-xs text-slate-400">
+       <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+           <div className={`${isMobile ? 'p-3' : 'p-4'} bg-slate-800 rounded-lg border border-slate-700`}>
+               <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-white mb-2`}>Single Threaded (Node.js)</h4>
+               <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-400`}>
                    Great for I/O, but if one calculation takes time (blocking), everyone waits. 
                    <br/><span className="text-red-400">Lag in games if logic is heavy.</span>
                </p>
            </div>
-           <div className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-               <h4 className="text-sm font-bold text-white mb-2">Concurrent (Go/C++/Rust)</h4>
-               <p className="text-xs text-slate-400">
+           <div className={`${isMobile ? 'p-3' : 'p-4'} bg-slate-800 rounded-lg border border-slate-700`}>
+               <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-white mb-2`}>Concurrent (Go/C++/Rust)</h4>
+               <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-slate-400`}>
                    Spawns lightweight threads (Goroutines) for every player. 
-                   <br/><span className="text-green-400">Ideal for high-concurrency real-time games (PUBG).</span>
+                   <br/><span className="text-green-400">Ideal for high-concurrency real-time games.</span>
                </p>
            </div>
        </div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Hash, Code2, MousePointerClick } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
 
@@ -14,6 +14,14 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
   
   const [shardA, setShardA] = useState<number[]>([]);
   const [shardB, setShardB] = useState<number[]>([]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || window.innerHeight < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleInsert = () => {
      if (!hasInteracted) setHasInteracted(true);
@@ -34,14 +42,14 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-900 rounded-xl p-8 border border-slate-700 shadow-2xl relative">
-       <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div className={`w-full max-w-4xl mx-auto bg-slate-900 rounded-xl ${isMobile ? 'p-4' : 'p-8'} border border-slate-700 shadow-2xl relative`}>
+       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between'} items-center border-b border-slate-700 pb-4 ${isMobile ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
             {/* ADDED BOUNCE AVATAR HERE */}
-            <BounceAvatar className="w-10 h-10" />
+            <BounceAvatar className={isMobile ? 'w-8 h-8' : 'w-10 h-10'} />
             
-            <h3 className="text-xl font-mono text-pink-400 flex items-center gap-2">
-                <Database /> Level 4: Database Sharding
+            <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-mono text-pink-400 flex items-center gap-2`}>
+                <Database size={isMobile ? 16 : 24} /> {isMobile ? 'DB Sharding' : 'Level 4: Database Sharding'}
             </h3>
           </div>
           
@@ -49,7 +57,7 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
             <button onClick={onShowCode} className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-cyan-400 transition-colors">
                 <Code2 size={14} /> Show Code
             </button>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Horizontal Data Scaling</span>
+            {!isMobile && <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Horizontal Data Scaling</span>}
           </div>
         </div>
 
@@ -95,25 +103,25 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
             </div>
 
             {/* Shards */}
-            <div className="flex justify-between w-full max-w-lg mt-8 relative">
+            <div className={`flex ${isMobile ? 'flex-col gap-4' : 'justify-between'} w-full max-w-lg ${isMobile ? 'mt-4' : 'mt-8'} relative`}>
                
                {/* Animation Paths */}
-               {animating && animating.target === 0 && (
+               {!isMobile && animating && animating.target === 0 && (
                    <div className="absolute top-[-20px] left-1/2 w-1 h-1 bg-transparent">
                       <div className="w-4 h-4 bg-pink-400 rounded-full animate-[flyLeft_1s_ease-in-out_forwards]"></div>
                    </div>
                )}
-               {animating && animating.target === 1 && (
+               {!isMobile && animating && animating.target === 1 && (
                    <div className="absolute top-[-20px] left-1/2 w-1 h-1 bg-transparent">
                       <div className="w-4 h-4 bg-pink-400 rounded-full animate-[flyRight_1s_ease-in-out_forwards]"></div>
                    </div>
                )}
 
                {/* Shard A */}
-               <div className="flex flex-col items-center gap-2 w-40">
-                  <div className={`w-full h-48 border-2 border-slate-600 rounded-xl bg-slate-800 relative overflow-hidden flex flex-col items-center p-2 transition-all ${animating?.target === 0 ? 'border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : ''}`}>
+               <div className={`flex flex-col items-center gap-2 ${isMobile ? 'w-full' : 'w-40'}`}>
+                  <div className={`w-full ${isMobile ? 'h-auto min-h-[120px]' : 'h-48'} border-2 border-slate-600 rounded-xl bg-slate-800 relative overflow-hidden flex flex-col items-center p-2 transition-all ${animating?.target === 0 ? 'border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : ''}`}>
                       <div className="w-full h-4 bg-slate-700 rounded-t-lg mb-2 opacity-50"></div>
-                      <div className="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                      <div className={`w-full flex-1 ${isMobile ? '' : 'overflow-y-auto'} custom-scrollbar flex flex-col gap-1`}>
                           {shardA.map((id, i) => (
                              <div key={i} className="text-xs font-mono bg-pink-500/20 text-pink-200 px-2 py-1 rounded border border-pink-500/30 text-center animate-in fade-in slide-in-from-top-2">
                                 ID: {id}
@@ -121,14 +129,14 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
                           ))}
                       </div>
                   </div>
-                  <span className="font-mono text-sm text-slate-400">Shard A (Evens)</span>
+                  <span className={`font-mono ${isMobile ? 'text-xs' : 'text-sm'} text-slate-400`}>Shard A (Evens)</span>
                </div>
 
                {/* Shard B */}
-               <div className="flex flex-col items-center gap-2 w-40">
-                  <div className={`w-full h-48 border-2 border-slate-600 rounded-xl bg-slate-800 relative overflow-hidden flex flex-col items-center p-2 transition-all ${animating?.target === 1 ? 'border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : ''}`}>
+               <div className={`flex flex-col items-center gap-2 ${isMobile ? 'w-full' : 'w-40'}`}>
+                  <div className={`w-full ${isMobile ? 'h-auto min-h-[120px]' : 'h-48'} border-2 border-slate-600 rounded-xl bg-slate-800 relative overflow-hidden flex flex-col items-center p-2 transition-all ${animating?.target === 1 ? 'border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : ''}`}>
                       <div className="w-full h-4 bg-slate-700 rounded-t-lg mb-2 opacity-50"></div>
-                      <div className="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                      <div className={`w-full flex-1 ${isMobile ? '' : 'overflow-y-auto'} custom-scrollbar flex flex-col gap-1`}>
                           {shardB.map((id, i) => (
                              <div key={i} className="text-xs font-mono bg-pink-500/20 text-pink-200 px-2 py-1 rounded border border-pink-500/30 text-center animate-in fade-in slide-in-from-top-2">
                                 ID: {id}
@@ -136,7 +144,7 @@ export const DatabaseShardingDemo: React.FC<Props> = ({ onShowCode }) => {
                           ))}
                       </div>
                   </div>
-                   <span className="font-mono text-sm text-slate-400">Shard B (Odds)</span>
+                   <span className={`font-mono ${isMobile ? 'text-xs' : 'text-sm'} text-slate-400`}>Shard B (Odds)</span>
                </div>
 
             </div>
