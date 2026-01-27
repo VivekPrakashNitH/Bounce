@@ -6,6 +6,7 @@ import { BounceAvatar, ChatBubble, CodeViewer, CommentSection, QuizModal, Univer
 
 // Page Components
 import { LandingPage, ProfileModal, AuthModal } from './components/pages';
+import { BeCuriousIntro } from './components/pages/BeCuriousIntro';
 
 // System Design Components
 import { LoadBalancerDemo, ClientServerDemo, ApiGatewayDemo, DatabaseShardingDemo, CachingDemo, DockerDemo, MessageQueueDemo, BackendLanguagesDemo, HldLldExplainer, DbInternalsDemo, FullStackHowTo, ConsistentHashingDemo, DbMigrationDemo, DevOpsLoopDemo } from './components/system-design';
@@ -34,10 +35,10 @@ const OBSTACLES: Obstacle[] = [
   { id: 'block-3', x: 800, y: 400, w: 50, h: 200, color: 'bg-zinc-800' },
 ];
 
-type ViewState = 'HOME' | 'GAME';
+type ViewState = 'INTRO' | 'HOME' | 'GAME';
 
 export default function App() {
-  const [viewState, setViewState] = useState<ViewState>('HOME');
+  const [viewState, setViewState] = useState<ViewState>('INTRO');
   const [position, setPosition] = useState<Position>({ x: 50, y: 300 });
   const [rotation, setRotation] = useState(0); 
   const [gameState, setGameState] = useState<GameState>(GameState.PLAYGROUND);
@@ -127,7 +128,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (viewState === 'HOME') return;
+    if (viewState === 'HOME' || viewState === 'INTRO') return;
 
     const handleKeyDown = (e: KeyboardEvent) => keysPressed.current.add(e.key);
     const handleKeyUp = (e: KeyboardEvent) => keysPressed.current.delete(e.key);
@@ -298,6 +299,9 @@ export default function App() {
             return <UniversalSystemDemo level={COURSE_CONTENT[currentLevelIndex]} onShowCode={handleShowCode} />;
       }
   };
+  if (viewState === 'INTRO') {
+    return <BeCuriousIntro onComplete={() => setViewState('HOME')} />;
+  }
 
   if (viewState === 'HOME') {
     return (

@@ -6,6 +6,12 @@ declare global {
   }
 }
 
+// Error type to distinguish errors from normal responses
+export interface PuterResponse {
+  text: string;
+  isError: boolean;
+}
+
 const PERSONA_PROMPT = `
 You are Bounce, a playful yet expert backend and system design mentor inside a gamified course.
 Teach interactively, keep answers concise (3-6 sentences), prefer bullets for clarity,
@@ -15,6 +21,12 @@ Encourage with short next-step questions when helpful.
 
 const waitForPuter = () =>
   new Promise<any>((resolve, reject) => {
+    // If puter is already available, resolve immediately
+    if (window.puter?.ai?.chat) {
+      resolve(window.puter);
+      return;
+    }
+
     const maxAttempts = 50;
     let attempts = 0;
     const timer = setInterval(() => {
@@ -25,7 +37,7 @@ const waitForPuter = () =>
       }
       if (attempts >= maxAttempts) {
         clearInterval(timer);
-        reject(new Error("Puter.ai failed to load"));
+        reject(new Error("Puter AI SDK failed to load. Please check your internet connection and refresh the page."));
       }
     }, 100);
   });
@@ -33,7 +45,7 @@ const waitForPuter = () =>
 export const sendMessageToPuter = async (
   history: ChatMessage[],
   newMessage: string
-): Promise<string> => {
+): Promise<PuterResponse> => {
   try {
     const puter = await waitForPuter();
 
@@ -53,12 +65,44 @@ Bounce:`;
       temperature: 0.4,
     });
 
-    if (typeof response === "string") return response;
-    if (response?.text) return response.text;
-    if (response?.message?.content) return response.message.content;
-    return "I couldn't get a reply from Puter. Try again?";
+    let responseText: string;
+    if (typeof response === "string") {
+      responseText = response;
+    } else if (response?.text) {
+      responseText = response.text;
+    } else if (response?.message?.content) {
+      responseText = response.message.content;
+    } else {
+      return {
+        text: "Error: Received empty response from Puter AI. Please try again.",
+        isError: true
+      };
+    }
+
+    return { text: responseText, isError: false };
   } catch (error) {
     console.error("Puter AI Error:", error);
-    return "Puter AI is still loading or unreachable. Please try again in a moment.";
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Provide user-friendly error messages
+    if (errorMessage.includes("failed to load")) {
+      return {
+        text: `⚠️ Cannot connect to Puter AI: ${errorMessage}`,
+        isError: true
+      };
+    }
+    
+    if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+      return {
+        text: "⚠️ Network error: Unable to reach Puter AI servers. Please check your internet connection.",
+        isError: true
+      };
+    }
+
+    return {
+      text: `⚠️ Puter AI Error: ${errorMessage}. Please try again in a moment.`,
+      isError: true
+    };
   }
 };

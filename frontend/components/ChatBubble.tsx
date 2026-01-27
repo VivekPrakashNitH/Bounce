@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, X, Bot, Loader2 } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { sendMessageToPuter } from '../services/puterService';
+import { sendMessageToPuter, PuterResponse } from '../services/puterService';
+
+interface ExtendedChatMessage extends ChatMessage {
+  isError?: boolean;
+}
 
 interface ChatBubbleProps {
   onClose: () => void;
@@ -11,7 +15,7 @@ interface ChatBubbleProps {
 export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ExtendedChatMessage[]>([
     { role: 'model', text: "Ready to design systems. Ask me anything." }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -31,12 +35,14 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
     setInput('');
     setIsLoading(true);
 
-    const newHistory: ChatMessage[] = [...messages, { role: 'user', text: userMsg }];
+    const newHistory: ExtendedChatMessage[] = [...messages, { role: 'user', text: userMsg }];
     setMessages(newHistory);
 
-    const responseText = await sendMessageToPuter(messages, userMsg);
+    // Convert to ChatMessage format for the service (without isError)
+    const historyForService: ChatMessage[] = messages.map(m => ({ role: m.role, text: m.text }));
+    const response: PuterResponse = await sendMessageToPuter(historyForService, userMsg);
     
-    setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+    setMessages(prev => [...prev, { role: 'model', text: response.text, isError: response.isError }]);
     setIsLoading(false);
   };
 
@@ -65,7 +71,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClose, isOpen }) => {
             <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
               msg.role === 'user' 
                 ? 'bg-white text-black' 
-                : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                : msg.isError 
+                  ? 'bg-red-900/50 text-red-300 border border-red-700'
+                  : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
             }`}>
               {msg.text}
             </div>
