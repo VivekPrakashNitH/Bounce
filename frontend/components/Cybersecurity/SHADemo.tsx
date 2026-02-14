@@ -2,7 +2,18 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Hash, Play, RotateCcw, Cpu } from 'lucide-react';
 
-const SHADemo: React.FC = () => {
+interface Props {
+    onShowCode?: () => void;
+    onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+    initialSectionIndex?: number;
+}
+
+const SHADemo: React.FC<Props> = ({ onShowCode, onProgress }) => {
+    React.useEffect(() => {
+        if (onProgress) {
+            onProgress({ sectionIndex: 0, totalSections: 1 });
+        }
+    }, [onProgress]);
     const [input, setInput] = useState('abc');
     const [isHashing, setIsHashing] = useState(false);
     const [round, setRound] = useState(0);

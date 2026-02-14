@@ -7,9 +7,11 @@ import { Header } from '../ui/Header';
 
 interface Props {
   onShowCode?: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
-export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
+export const GameLoopDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -23,6 +25,7 @@ export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
   const [loopStep, setLoopStep] = useState(0);
   const steps = ['Input', 'Update', 'Render', 'Wait'];
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const sections = [
     { id: 'section-1', label: 'The Game Loop' },
@@ -51,6 +54,17 @@ export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       const container = scrollContainerRef.current;
       if (!container) return;
@@ -59,8 +73,27 @@ export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
       const progress = Math.min(100, (scrollTop / totalScroll) * 100);
       setScrollProgress(progress);
       const sectionCount = sections.length;
-      setCurrentSection(Math.min(sectionCount - 1, Math.floor((scrollTop / (totalScroll / sectionCount)) * sectionCount) % sectionCount));
+
+      let activeSection = 0;
+      for (let i = 0; i < sections.length; i++) {
+        const element = document.getElementById(sections[i].id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          if (rect.top < containerRect.top + containerRect.height / 2) {
+            activeSection = i;
+          } else {
+            break;
+          }
+        }
+      }
+
+      setCurrentSection(activeSection);
       setCompletionProgress(Math.max(0, Math.min(1, (progress - 90) / 10)));
+
+      if (onProgress) {
+        onProgress({ sectionIndex: activeSection, totalSections: sections.length });
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -84,6 +117,7 @@ export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', handleScroll);
+      handleScroll();
     }
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -92,7 +126,7 @@ export const GameLoopDemo: React.FC<Props> = ({ onShowCode }) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gateUnlocked, showInstructions]);
+  }, [gateUnlocked, showInstructions, onProgress, initialSectionIndex, initialScrollDone]);
 
   useEffect(() => {
     setBallVisible(currentSection !== 3);

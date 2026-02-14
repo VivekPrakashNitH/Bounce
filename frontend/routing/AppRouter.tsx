@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { BeCuriousIntro } from '../components/pages/BeCuriousIntro';
 import { LandingPage } from '../components/pages/LandingPage';
 import { CourseCompletion } from '../components/pages/CourseCompletion.tsx';
+import { ReviewsPage } from '../components/pages/ReviewsPage';
 import { CourseExperience } from '../CourseExperience';
 import { loadTrackProgress, persistProgress } from './progress';
 import { TrackId } from './tracks';
@@ -45,6 +46,7 @@ export const AppRouter = () => (
       <Route path="/course/:track" element={<CourseExperience />} />
       <Route path="/course/:track/level/:levelId" element={<CourseExperience />} />
       <Route path="/course-complete" element={<CompletionRoute />} />
+      <Route path="/reviews" element={<ReviewsPage />} />
       <Route path="*" element={<Navigate to="/intro" replace />} />
     </Routes>
   </BrowserRouter>

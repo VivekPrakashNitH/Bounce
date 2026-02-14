@@ -5,7 +5,18 @@ import { Key, Lock, Unlock, ArrowRight, Layers, Play, FastForward, RotateCcw } f
 const generateRandomHex = () => Math.floor(Math.random() * 255).toString(16).padStart(2, '0').toUpperCase();
 const generateGrid = () => Array(4).fill(0).map(() => Array(4).fill(0).map(() => generateRandomHex()));
 
-const AESDemo: React.FC = () => {
+interface Props {
+    onShowCode?: () => void;
+    onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+    initialSectionIndex?: number;
+}
+
+const AESDemo: React.FC<Props> = ({ onShowCode, onProgress }) => {
+    useEffect(() => {
+        if (onProgress) {
+            onProgress({ sectionIndex: 0, totalSections: 1 });
+        }
+    }, [onProgress]);
     const [inputText, setInputText] = useState('Secret Data');
     const [keyText, setKeyText] = useState('MyKey123');
     const [isAnimating, setIsAnimating] = useState(false);

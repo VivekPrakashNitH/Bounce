@@ -9,22 +9,22 @@ import { GameState } from '../../types';
 
 interface Props {
   onShowCode: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
-export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
+export const ClientServerDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sending' | 'processing' | 'receiving' | 'done'>('idle');
   const [data, setData] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
-  const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [keysPressed, setKeysPressed] = useState<Set<string>>(new Set());
   const [hoveredAnimation, setHoveredAnimation] = useState<string | null>(null);
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
   const [levelComplete, setLevelComplete] = useState(false);
   const [completionProgress, setCompletionProgress] = useState(0);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const sections = [
     { id: 'section-1', label: 'Model' },
@@ -36,18 +36,23 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
   ];
 
   // --- Touch Unlock Logic ---
-  const handleTouchUnlock = () => {
-    if (!gateUnlocked) {
-      setGateUnlocked(true);
-      setTimeout(() => setShowInstructions(false), 1500);
-    }
-  };
+
 
   // --- Scroll & Navigation Logic ---
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       // Find the scrollable container - in CourseExperience it's the parent div
-      // But here we can attach a ref to the main wrapper div of this component
       const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
       if (!container) return;
 
@@ -77,12 +82,13 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
         }
       }
       setCurrentSection(Math.min(activeSection, sections.length - 1));
+
+      if (onProgress) {
+        onProgress({ sectionIndex: activeSection, totalSections: sections.length });
+      }
     };
 
     // We need to attach to the scrollable container found in CourseExperience
-    // Since this component is rendered INSIDE that container, we can find it via DOM or 
-    // better yet, just use window 'scroll' with capture if possible, but the event doesn't bubble.
-    // The reliable way is to query the specific container class used in CourseExperience
     const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
     if (container) {
       container.addEventListener('scroll', handleScroll);
@@ -95,65 +101,9 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
         container.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [sections.length, sections]);
+  }, [sections.length, sections, onProgress, initialSectionIndex, initialScrollDone]);
 
-  useEffect(() => {
-    if (gateUnlocked) return;
 
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ([' ', 'Enter'].includes(e.key)) {
-        setGateUnlocked(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [gateUnlocked]);
-
-  useEffect(() => {
-    if (!gateUnlocked || !showInstructions) return;
-
-    const handleInstructionClose = (e: KeyboardEvent) => {
-      if ([' ', 'Enter'].includes(e.key)) {
-        setShowInstructions(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleInstructionClose);
-    return () => window.removeEventListener('keydown', handleInstructionClose);
-  }, [gateUnlocked, showInstructions]);
-
-  useEffect(() => {
-    if (!gateUnlocked) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-        setKeysPressed((prev) => new Set([...prev, e.key]));
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        setKeysPressed((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(e.key);
-          return newSet;
-        });
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [gateUnlocked]);
 
 
 
@@ -190,146 +140,7 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode }) => {
       <AnimatedBackground variant="code" opacity={6} />
 
       {/* GAME GATE OVERLAY */}
-      {!gateUnlocked && (
-        <div
-          className="fixed inset-0 z-50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
-          onClick={handleTouchUnlock}
-          onTouchStart={handleTouchUnlock}
-        >
-          {/* Gate Content */}
-          <div className="relative z-10 text-center flex flex-col items-center gap-6 sm:gap-8">
-            <div>
-              <h1 className="text-3xl sm:text-5xl font-bold text-white mb-2 tracking-tight">
-                Level 1
-              </h1>
-              <p className="text-base sm:text-lg text-slate-400 font-mono">Client-Server Model</p>
-            </div>
 
-            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-cyan-400 flex items-center justify-center animate-spin" style={{ animationDuration: '4s' }}>
-              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-blue-500 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }} />
-            </div>
-
-            <div className="max-w-xs">
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
-                Understand how the internet works at the foundational level.
-              </p>
-
-              {/* Desktop hint */}
-              <p className="text-slate-500 text-xs sm:text-sm font-mono hidden md:block">
-                Press any arrow key or spacebar to begin
-              </p>
-
-              {/* Mobile hint */}
-              <p className="text-slate-500 text-xs sm:text-sm font-mono md:hidden">
-                Tap anywhere to begin
-              </p>
-            </div>
-
-            {/* Difficulty Indicator */}
-            <div className="flex gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-slate-400 text-xs sm:text-sm font-mono">Beginner</span>
-            </div>
-
-            {/* Mobile tap indicator */}
-            <div className="md:hidden flex flex-col items-center text-slate-500 mt-4">
-              <div className="w-12 h-12 border-2 border-cyan-400/50 rounded-full flex items-center justify-center animate-ping opacity-50"></div>
-              <span className="text-xs mt-2 text-cyan-400">TAP</span>
-            </div>
-          </div>
-
-          {/* Orbiting Particles */}
-          <div className="absolute inset-0 pointer-events-none">
-            {[0, 120, 240].map((angle, idx) => (
-              <div
-                key={idx}
-                className="absolute w-2 h-2 bg-cyan-400/30 rounded-full"
-                style={{
-                  top: '50%',
-                  left: '50%',
-                  animation: `orbit 10s linear infinite`,
-                  animationDelay: `${idx * 3.33}s`,
-                  transformOrigin: '120px 0',
-                  transform: `rotate(${angle}deg)`,
-                }}
-              />
-            ))}
-          </div>
-
-          <style>{`
-            @keyframes orbit {
-              from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
-              to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
-            }
-          `}</style>
-        </div>
-      )}
-
-      {/* FADE OUT TRANSITION */}
-      {gateUnlocked && (
-        <style>{`
-          @keyframes fadeOut {
-            0% { opacity: 1; }
-            100% { opacity: 0; pointer-events: none; }
-          }
-          .gate-overlay {
-            animation: fadeOut 0.8s ease-out forwards;
-          }
-        `}</style>
-      )}
-
-      {/* INSTRUCTION OVERLAY */}
-      {gateUnlocked && showInstructions && (
-        <div className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-500 ${!showInstructions ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <div className="bg-slate-900 border-2 border-cyan-400/50 rounded-2xl p-6 sm:p-10 max-w-md w-full mx-4 text-center shadow-[0_0_40px_rgba(34,211,238,0.2)]">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">How to Play</h3>
-
-            <p className="text-slate-300 text-sm sm:text-base mb-8">
-              Use <span className="text-cyan-400 font-semibold">arrow keys</span> to navigate
-            </p>
-
-            {/* Arrow Key Icons */}
-            <div className="grid grid-cols-3 gap-3 mb-8 max-w-xs mx-auto">
-              {/* Left */}
-              <div className="flex justify-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">
-                  ⬅️
-                </div>
-              </div>
-
-              {/* Up */}
-              <div className="flex justify-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">
-                  ⬆️
-                </div>
-              </div>
-
-              {/* Right */}
-              <div className="flex justify-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">
-                  ➡️
-                </div>
-              </div>
-
-              {/* Down */}
-              <div className="flex justify-center col-start-2">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">
-                  ⬇️
-                </div>
-              </div>
-            </div>
-
-            <p className="text-slate-500 text-xs sm:text-sm font-mono">
-              Press any arrow key to continue
-            </p>
-
-            {/* Animated Pulse */}
-            <div className="mt-6 flex justify-center">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CODE EXPLANATION PANEL */}
       {showCodePanel && (
@@ -503,100 +314,80 @@ const [requestStatus, setRequestStatus] =
                 <h4 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
                   <span className="text-xl">🎮</span> Interaction System
                 </h4>
-                <div className="space-y-3">
-                  <div className="bg-slate-800/40 border border-purple-900/30 rounded-lg p-3">
-                    <p className="text-cyan-400 font-mono text-xs font-bold mb-2">Gate Unlock</p>
-                    <p className="text-slate-400 text-xs">User presses any arrow key → gate fades, instructions appear</p>
-                  </div>
-                  <div className="bg-slate-800/40 border border-purple-900/30 rounded-lg p-3">
-                    <p className="text-cyan-400 font-mono text-xs font-bold mb-2">Ball Movement</p>
-                    <p className="text-slate-400 text-xs">Arrow keys move ball on page. Rotates continuously. Bounces idle. Hides during animations.</p>
-                  </div>
-                  <div className="bg-slate-800/40 border border-purple-900/30 rounded-lg p-3">
-                    <p className="text-cyan-400 font-mono text-xs font-bold mb-2">Interactive Buttons</p>
-                    <p className="text-slate-400 text-xs">Hover animations reveal "Want to see how this works?" with code panel</p>
-                  </div>
+                <div className="bg-slate-800/40 border border-purple-900/30 rounded-lg p-3">
+                  <p className="text-cyan-400 font-mono text-xs font-bold mb-2">Interactive Buttons</p>
+                  <p className="text-slate-400 text-xs">Hover animations reveal "Want to see how this works?" with code panel</p>
                 </div>
               </div>
+            </div>
 
-              {/* State Management */}
-              <div>
-                <h4 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
-                  <span className="text-xl">⚙️</span> State & Effects
-                </h4>
-                <p className="text-slate-300 text-sm mb-3 leading-relaxed">
-                  This page uses multiple coordinated state machines:
-                </p>
-                <ul className="space-y-2 text-sm text-slate-300">
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">→</span>
-                    <span><span className="text-cyan-400">requestStatus</span>: State machine tracking request lifecycle (idle → sending → processing → receiving → done)</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">→</span>
-                    <span><span className="text-cyan-400">scrollProgress</span>: 0–100% based on document scroll position</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">→</span>
-                    <span><span className="text-cyan-400">currentSection</span>: Which section is viewport-centered</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">→</span>
-                    <span><span className="text-cyan-400">ballPosition & ballRotation</span>: Real-time updates from keyboard input</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">→</span>
-                    <span><span className="text-cyan-400">gateUnlocked & showInstructions</span>: Onboarding flow control</span>
-                  </li>
-                </ul>
-              </div>
+            {/* State Management */}
+            <div>
+              <h4 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
+                <span className="text-xl">⚙️</span> State & Effects
+              </h4>
+              <p className="text-slate-300 text-sm mb-3 leading-relaxed">
+                This page uses multiple coordinated state machines:
+              </p>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">→</span>
+                  <span><span className="text-cyan-400">requestStatus</span>: State machine tracking request lifecycle (idle → sending → processing → receiving → done)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">→</span>
+                  <span><span className="text-cyan-400">scrollProgress</span>: 0–100% based on document scroll position</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">→</span>
+                  <span><span className="text-cyan-400">currentSection</span>: Which section is viewport-centered</span>
+                </li>
+              </ul>
+            </div>
 
-              {/* Key Design Decisions */}
-              <div>
-                <h4 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
-                  <span className="text-xl">💡</span> Design Decisions
-                </h4>
-                <ul className="space-y-2 text-sm text-slate-300">
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">✓</span>
-                    <span><span className="text-cyan-400">Scroll-driven progress</span> — Teaches pacing, not rushing. Progress bar = learning map.</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">✓</span>
-                    <span><span className="text-cyan-400">Ball as metaphor</span> — Physical object you control = "you're driving the learning"</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">✓</span>
-                    <span><span className="text-cyan-400">Hover → Explain</span> — Inline learning: curious users can peek at code without breaking flow</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">✓</span>
-                    <span><span className="text-cyan-400">Gate + Instructions</span> — First-time users are onboarded. Returners skip immediately.</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-purple-400 font-bold">✓</span>
-                    <span><span className="text-cyan-400">Apple aesthetic</span> — Generous spacing, subtle shadows, dark mode, focus on clarity</span>
-                  </li>
-                </ul>
-              </div>
+            {/* Key Design Decisions */}
+            <div>
+              <h4 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
+                <span className="text-xl">💡</span> Design Decisions
+              </h4>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">✓</span>
+                  <span><span className="text-cyan-400">Scroll-driven progress</span> — Teaches pacing, not rushing. Progress bar = learning map.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">✓</span>
+                  <span><span className="text-cyan-400">Ball as metaphor</span> — Physical object you control = "you're driving the learning"</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">✓</span>
+                  <span><span className="text-cyan-400">Hover → Explain</span> — Inline learning: curious users can peek at code without breaking flow</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-purple-400 font-bold">✓</span>
+                  <span><span className="text-cyan-400">Apple aesthetic</span> — Generous spacing, subtle shadows, dark mode, focus on clarity</span>
+                </li>
+              </ul>
+            </div>
 
-              {/* Closing */}
-              <div className="bg-gradient-to-r from-purple-950/30 to-blue-950/30 border border-purple-900/50 rounded-lg p-4">
-                <p className="text-purple-400 font-semibold mb-2">You Now Know</p>
-                <p className="text-slate-300 text-sm">
-                  How to build a <span className="text-cyan-400 font-semibold">scroll-driven educational experience</span> that teaches system design concepts while maintaining engagement. This pattern scales to all 13 System Design levels.
-                </p>
-                <button
-                  onClick={() => setShowPageMadeModal(false)}
-                  className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold rounded-lg transition-colors"
-                >
-                  Ready to Learn
-                </button>
-              </div>
+            {/* Closing */}
+            <div className="bg-gradient-to-r from-purple-950/30 to-blue-950/30 border border-purple-900/50 rounded-lg p-4">
+              <p className="text-purple-400 font-semibold mb-2">You Now Know</p>
+              <p className="text-slate-300 text-sm">
+                How to build a <span className="text-cyan-400 font-semibold">scroll-driven educational experience</span> that teaches system design concepts while maintaining engagement. This pattern scales to all 13 System Design levels.
+              </p>
+              <button
+                onClick={() => setShowPageMadeModal(false)}
+                className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold rounded-lg transition-colors"
+              >
+                Ready to Learn
+              </button>
             </div>
           </div>
         </div>
-      )}
+      )
+      }
+
 
       {/* FLOATING "HOW THIS WAS MADE" BUTTON */}
       <button
@@ -623,8 +414,7 @@ const [requestStatus, setRequestStatus] =
           element?.scrollIntoView({ behavior: 'smooth' });
         }}
         progressHeight={scrollProgress}
-        accentColor="blue"
-        isVisible={gateUnlocked}
+        isVisible={true}
       />
 
       {/* SECTION 1: INTRO (Content Left, Visual Right) */}
@@ -983,6 +773,6 @@ const [requestStatus, setRequestStatus] =
           100% { transform: translateY(-64px); opacity: 1; }
         }
       `}</style>
-    </div>
+    </div >
   );
 };

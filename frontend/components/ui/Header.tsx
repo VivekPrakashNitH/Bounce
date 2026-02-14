@@ -1,5 +1,6 @@
 import React from 'react';
 import { Code2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { BounceAvatar } from './BounceAvatar';
 
 export type AccentColor = 'rose' | 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'cyan' | 'teal' | 'sky' | 'yellow' | 'amber' | 'emerald' | 'indigo' | 'gray';
@@ -87,6 +88,8 @@ export const Header: React.FC<HeaderProps> = ({
   levelCode,
   accentColor = 'cyan',
 }) => {
+  const navigate = useNavigate();
+
   // Calculate avatar movement: starts at 0%, moves right as scroll progresses
   const avatarTranslateX = (scrollProgress / 100) * 40; // Max 40px translation
   const avatarRotation = (scrollProgress / 100) * 360; // Full rotation by end
@@ -114,12 +117,23 @@ export const Header: React.FC<HeaderProps> = ({
             <h2 className="text-sm sm:text-lg font-semibold text-white">{title}</h2>
           </div>
         </div>
-        <button
-          onClick={onShowCode}
-          className={`flex items-center gap-1 text-[10px] sm:text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 sm:px-3 py-1.5 rounded ${levelCodeColor} transition-colors`}
-        >
-          <Code2 size={14} /> Code
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Review Button */}
+          <button
+            onClick={() => navigate('/reviews')}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded transition-colors group"
+          >
+            <BounceAvatar className="w-5 h-5" />
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-300 group-hover:text-white">Review</span>
+          </button>
+
+          <button
+            onClick={onShowCode}
+            className={`flex items-center gap-1 text-[10px] sm:text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 sm:px-3 py-1.5 rounded ${levelCodeColor} transition-colors`}
+          >
+            <Code2 size={14} /> Code
+          </button>
+        </div>
       </div>
 
       {/* Progress Bar */}

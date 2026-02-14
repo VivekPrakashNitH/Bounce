@@ -7,6 +7,8 @@ import { Header } from '../ui/Header';
 
 interface Props {
   onShowCode?: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
 interface Order {
@@ -16,7 +18,7 @@ interface Order {
   type: 'buy' | 'sell';
 }
 
-export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
+export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
 
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
@@ -29,6 +31,7 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
   const [sellOrders, setSellOrders] = useState<Order[]>([]);
   const [matched, setMatched] = useState<Array<{ buy: Order; sell: Order }>>([]);
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const sections = [
     { id: 'section-1', label: 'Order Matching' },
@@ -56,6 +59,17 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
       if (!container) return;
@@ -64,13 +78,13 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
       const progress = totalScroll > 0 ? Math.min(100, (scrollTop / totalScroll) * 100) : 0;
       setScrollProgress(progress);
 
-      const sections = ['section-1', 'section-2', 'section-3', 'section-4', 'section-5', 'section-6'];
+      const sectionsList = ['section-1', 'section-2', 'section-3', 'section-4', 'section-5', 'section-6'];
       let activeSection = 0;
       const containerRect = container.getBoundingClientRect();
       const containerCenter = containerRect.top + containerRect.height / 2;
 
-      for (let i = 0; i < sections.length; i++) {
-        const element = document.getElementById(sections[i]);
+      for (let i = 0; i < sectionsList.length; i++) {
+        const element = document.getElementById(sectionsList[i]);
         if (element) {
           const rect = element.getBoundingClientRect();
           if (rect.top < containerCenter) {
@@ -82,6 +96,10 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
       }
       setCurrentSection(activeSection);
       setCompletionProgress(Math.max(0, Math.min(1, (progress - 90) / 10)));
+
+      if (onProgress) {
+        onProgress({ sectionIndex: activeSection, totalSections: sectionsList.length });
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -116,7 +134,7 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode }) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gateUnlocked, showInstructions]);
+  }, [gateUnlocked, showInstructions, onProgress, initialSectionIndex, initialScrollDone]);
 
   useEffect(() => {
     setBallVisible(currentSection !== 3);

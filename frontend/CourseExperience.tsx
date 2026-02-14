@@ -44,7 +44,45 @@ export const CourseExperience: React.FC = () => {
   const [rotation, setRotation] = useState(0);
   const [gameState, setGameState] = useState<GameState>(validatedLevelFromParams ?? GameState.PLAYGROUND);
   const [currentLevelIndex, setCurrentLevelIndex] = useState(() => Math.max(trackLevels.indexOf(initialLevelId ?? trackLevels[0]), 0));
+  const [subLevelProgress, setSubLevelProgress] = useState(0); // 0 to 1 ratio
+  const [storedSectionIndex, setStoredSectionIndex] = useState<number | undefined>(undefined);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const persistenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleGranularProgress = (data: { sectionIndex: number; totalSections: number }) => {
+    const ratio = data.totalSections > 0 ? (data.sectionIndex / data.totalSections) : 0;
+    setSubLevelProgress(ratio);
+
+    // Debounce persistence
+    if (persistenceTimeoutRef.current) clearTimeout(persistenceTimeoutRef.current);
+    persistenceTimeoutRef.current = setTimeout(() => {
+      persistProgress(trackId!, gameState, data.sectionIndex, data.totalSections);
+    }, 1000);
+  };
+
+  // ... (effects)
+
+  // Load stored section index on mount or level change
+  useEffect(() => {
+    if (trackId && gameState) {
+      const stored = loadTrackProgress(trackId); // This returns GameState, need loadStoredProgress for details
+      // We need to fetch the full object here ideally, but for now let's use the helper
+      const rawStored = localStorage.getItem('bounce_progress_v2');
+      if (rawStored) {
+        try {
+          const parsed = JSON.parse(rawStored);
+          if (parsed.track === trackId && parsed.levelId === gameState && parsed.sectionIndex !== undefined) {
+            setStoredSectionIndex(parsed.sectionIndex);
+          } else {
+            setStoredSectionIndex(undefined);
+          }
+        } catch (e) { /* ignore */ }
+      }
+    }
+  }, [trackId, gameState]);
+
+
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeSnippet, setActiveSnippet] = useState<CodeSnippet | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -96,6 +134,7 @@ export const CourseExperience: React.FC = () => {
       }
       setGameState(GameState.PLAYGROUND);
     }
+    setSubLevelProgress(0);
   }, [trackId, levelId, trackLevels, navigate]);
 
   useEffect(() => {
@@ -289,65 +328,65 @@ export const CourseExperience: React.FC = () => {
       case GameState.LEVEL_HLD_LLD:
         return <HldLldExplainer />;
       case GameState.LEVEL_BACKEND_LANGUAGES:
-        return <BackendLanguagesDemo onShowCode={handleShowCode} />;
+        return <BackendLanguagesDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CLIENT_SERVER:
-        return <ClientServerDemo onShowCode={handleShowCode} />;
+        return <ClientServerDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_LOAD_BALANCER:
-        return <LoadBalancerDemo onShowCode={handleShowCode} />;
+        return <LoadBalancerDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_API_GATEWAY:
-        return <ApiGatewayDemo onShowCode={handleShowCode} />;
+        return <ApiGatewayDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CACHING:
-        return <CachingDemo />;
+        return <CachingDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_DB_SHARDING:
-        return <DatabaseShardingDemo onShowCode={handleShowCode} />;
+        return <DatabaseShardingDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_DOCKER:
-        return <DockerDemo onShowCode={handleShowCode} />;
+        return <DockerDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_MESSAGE_QUEUES:
-        return <MessageQueueDemo onShowCode={handleShowCode} />;
+        return <MessageQueueDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_DB_INTERNALS:
-        return <DbInternalsDemo onShowCode={handleShowCode} />;
+        return <DbInternalsDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_DEVOPS_LOOP:
-        return <DevOpsLoopDemo onShowCode={handleShowCode} />;
+        return <DevOpsLoopDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_FULL_STACK_HOWTO:
-        return <FullStackHowTo onShowCode={handleShowCode} />;
+        return <FullStackHowTo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CONSISTENT_HASHING:
-        return <ConsistentHashingDemo onShowCode={handleShowCode} />;
+        return <ConsistentHashingDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_DB_MIGRATIONS:
-        return <DbMigrationDemo onShowCode={handleShowCode} />;
+        return <DbMigrationDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.CASE_URL_SHORTENER:
-        return <UrlShortenerDemo onShowCode={handleShowCode} />;
+        return <UrlShortenerDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.CASE_INSTAGRAM:
-        return <InstagramDemo onShowCode={handleShowCode} />;
+        return <InstagramDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.CASE_UBER:
-        return <UberDemo onShowCode={handleShowCode} />;
+        return <UberDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_QUADTREE_DEEP_DIVE:
-        return <QuadtreeVisualizer />;
+        return <QuadtreeVisualizer onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_GAME_INTRO:
-        return <GameIntroDemo onShowCode={handleShowCode} />;
+        return <GameIntroDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_GAME_ARCH:
-        return <GameArchDemo onShowCode={handleShowCode} />;
+        return <GameArchDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_GAME_NETWORKING:
-        return <GameNetworkingDemo onShowCode={handleShowCode} />;
+        return <GameNetworkingDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_GAME_PHYSICS:
-        return <HitDetectionDemo onShowCode={handleShowCode} />;
+        return <HitDetectionDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_GAME_LOOP:
-        return <GameLoopDemo onShowCode={handleShowCode} />;
+        return <GameLoopDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_ORDER_BOOK:
-        return <OrderMatchingDemo onShowCode={handleShowCode} />;
+        return <OrderMatchingDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_ENCRYPTION:
-        return <EncryptionDemo onShowCode={handleShowCode} />;
+        return <EncryptionDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_SQLI:
-        return <SqlInjectionDemo onShowCode={handleShowCode} />;
+        return <SqlInjectionDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_AES:
-        return <AESDemo />;
+        return <AESDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_RSA:
-        return <RSADemo />;
+        return <RSADemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_SHA:
-        return <SHADemo />;
+        return <SHADemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       case GameState.LEVEL_CYBER_BCRYPT:
-        return <BcryptDemo />;
+        return <BcryptDemo onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} />;
       default:
-        return currentLevel ? <UniversalSystemDemo level={currentLevel} onShowCode={handleShowCode} /> : null;
+        return currentLevel ? <UniversalSystemDemo level={currentLevel} onShowCode={handleShowCode} onProgress={handleGranularProgress} initialSectionIndex={storedSectionIndex} /> : null;
     }
   };
 
@@ -382,17 +421,22 @@ export const CourseExperience: React.FC = () => {
             >
               <Map size={10} /> <span className="hidden sm:inline">Roadmap</span>
             </button>
-            {/* Floating helper avatar */}
-            <div className="relative ml-1 sm:ml-2">
-              <BounceAvatar className="w-6 h-6 sm:w-8 sm:h-8 animate-bounce" />
-            </div>
+            <button
+              onClick={() => navigate('/reviews')}
+              className="text-[8px] sm:text-[10px] uppercase tracking-widest flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-white transition-colors bg-zinc-900/80 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-white/5 hover:border-white/20"
+            >
+              <BounceAvatar className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Review</span>
+            </button>
           </div>
         </div>
 
         <div className="flex gap-2 sm:gap-3 pointer-events-auto items-center">
-          <div className="bg-black/80 backdrop-blur-md border border-white/10 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-mono text-[8px] sm:text-[10px] uppercase tracking-widest text-zinc-400 shadow-xl flex items-center">
-            <span className="text-white font-bold mr-1 sm:mr-2">L{currentLevelIndex + 1}</span>{' '}
+          <div className="bg-black/80 backdrop-blur-md border border-white/10 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-mono text-[8px] sm:text-[10px] uppercase tracking-widest text-zinc-400 shadow-xl flex items-center gap-2">
+            <span className="text-white font-bold">L{currentLevelIndex + 1}</span>
             <span className="hidden md:inline">{currentLevel?.title}</span>
+            <span className="text-emerald-400 border-l border-white/10 pl-2">
+              {Math.min(100, Math.round(((currentLevelIndex + subLevelProgress) / trackLevels.length) * 100))}%
+            </span>
           </div>
 
           {currentUser ? (
@@ -540,7 +584,7 @@ export const CourseExperience: React.FC = () => {
             {(currentLevelIndex + 1).toString().padStart(2, '0')}
           </div>
 
-          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center border-l border-white/5 backdrop-blur-sm">
+          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center border-l border-white/5 backdrop-blur-sm animate-pulse">
             <div className="text-white font-mono text-xs rotate-90 whitespace-nowrap tracking-[0.3em] font-bold opacity-70">ENTER ZONE</div>
           </div>
         </>

@@ -2,7 +2,18 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Shield, Settings, Clock, Repeat } from 'lucide-react';
 
-const BcryptDemo: React.FC = () => {
+interface Props {
+    onShowCode?: () => void;
+    onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+    initialSectionIndex?: number;
+}
+
+const BcryptDemo: React.FC<Props> = ({ onShowCode, onProgress }) => {
+    React.useEffect(() => {
+        if (onProgress) {
+            onProgress({ sectionIndex: 0, totalSections: 1 });
+        }
+    }, [onProgress]);
     const [password, setPassword] = useState('password123');
     const [cost, setCost] = useState(5); // Default start slightly higher for demo
     const [isHashing, setIsHashing] = useState(false);

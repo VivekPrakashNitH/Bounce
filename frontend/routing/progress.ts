@@ -7,6 +7,8 @@ const COMPLETED_KEY = 'bounce_completed_levels';
 export interface StoredProgress {
   track: TrackId;
   levelId: GameState;
+  sectionIndex?: number;
+  totalSections?: number;
 }
 
 const isValidStoredProgress = (value: any): value is StoredProgress => {
@@ -36,8 +38,8 @@ export const loadTrackProgress = (track: TrackId): GameState | null => {
   return getDefaultLevelForTrack(track);
 };
 
-export const persistProgress = (track: TrackId, levelId: GameState) => {
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify({ track, levelId } satisfies StoredProgress));
+export const persistProgress = (track: TrackId, levelId: GameState, sectionIndex?: number, totalSections?: number) => {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({ track, levelId, sectionIndex, totalSections } satisfies StoredProgress));
 };
 
 export const readCompletedLevels = (): GameState[] => {

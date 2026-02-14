@@ -7,21 +7,21 @@ import { Header } from '../ui/Header';
 
 interface Props {
   onShowCode?: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
-export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode }) => {
+export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
-  const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [keysPressed, setKeysPressed] = useState<Set<string>>(new Set());
-  const [ballVisible, setBallVisible] = useState(true);
+
   const [completionProgress, setCompletionProgress] = useState(0);
   const [activeRoute, setActiveRoute] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const sections = [
     { id: 'section-1', label: 'What is API Gateway' },
@@ -33,14 +33,20 @@ export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode }) => {
   ];
 
   // --- Touch Unlock Logic ---
-  const handleTouchUnlock = () => {
-    if (!gateUnlocked) {
-      setGateUnlocked(true);
-      setTimeout(() => setShowInstructions(false), 1500);
-    }
-  };
+
 
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
       if (!container) return;
@@ -66,45 +72,24 @@ export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode }) => {
       }
       setCurrentSection(Math.min(activeSection, sections.length - 1));
       setCompletionProgress(Math.max(0, Math.min(1, (progress - 90) / 10)));
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-        if (!gateUnlocked) {
-          setGateUnlocked(true);
-          setShowInstructions(true);
-        } else if (showInstructions) {
-          setShowInstructions(false);
-        }
-        setKeysPressed(prev => new Set([...prev, e.key]));
+
+      if (onProgress) {
+        onProgress({ sectionIndex: activeSection, totalSections: sections.length });
       }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      setKeysPressed(prev => {
-        const next = new Set(prev);
-        next.delete(e.key);
-        return next;
-      });
     };
     const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
     if (container) {
       container.addEventListener('scroll', handleScroll);
       handleScroll();
     }
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
     return () => {
       if (container) {
         container.removeEventListener('scroll', handleScroll);
       }
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [sections.length, sections, gateUnlocked, showInstructions]);
+  }, [sections.length, sections, onProgress, initialSectionIndex, initialScrollDone]);
 
-  useEffect(() => {
-    setBallVisible(currentSection !== 3);
-  }, [currentSection]);
+
 
   const handleRequest = (route: '/users' | '/orders') => {
     if (processing) return;
@@ -139,7 +124,7 @@ export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode }) => {
         }}
         progressHeight={scrollProgress}
         accentColor="purple"
-        isVisible={gateUnlocked}
+        isVisible={true}
       />
 
       {/* PAGE ARCHITECTURE MODAL */}
@@ -248,53 +233,7 @@ export const ApiGatewayDemo: React.FC<Props> = ({ onShowCode }) => {
         <span className="text-xl sm:text-2xl">⚙️</span>
       </button>
 
-      {!gateUnlocked && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center cursor-pointer"
-          onClick={handleTouchUnlock}
-          onTouchStart={handleTouchUnlock}
-        >
-          <div className="text-center">
-            <BounceAvatar className="w-32 h-32 mx-auto mb-6 opacity-80" />
 
-            {/* Desktop hint */}
-            <p className="text-slate-300 text-lg mb-4 hidden md:block">Press any arrow key to unlock</p>
-
-            {/* Mobile hint */}
-            <p className="text-slate-300 text-lg mb-4 md:hidden">Tap anywhere to unlock</p>
-
-            <div className="flex gap-3 justify-center opacity-60 text-sm hidden md:flex">
-              <span>UP</span>
-              <span>DOWN</span>
-              <span>LEFT</span>
-              <span>RIGHT</span>
-            </div>
-
-            {/* Mobile tap indicator */}
-            <div className="md:hidden flex flex-col items-center text-slate-500 mt-4">
-              <div className="w-12 h-12 border-2 border-purple-400/50 rounded-full flex items-center justify-center animate-ping opacity-50"></div>
-              <span className="text-xs mt-2 text-purple-400">TAP</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {gateUnlocked && (
-        <GameInstructions
-          visible={showInstructions}
-          onDismiss={() => setShowInstructions(false)}
-          onShow={() => setShowInstructions(true)}
-          theme="purple"
-          title="How to Play"
-          subtitle="Use arrow keys to move. Bounce to enter the zone."
-        />
-      )}
-
-      {ballVisible && gateUnlocked && !showInstructions && (
-        <div className="fixed z-30 pointer-events-none">
-          <BounceAvatar className="w-4 h-4 opacity-70" />
-        </div>
-      )}
 
       <div className="pt-32 pb-20">
         <section id="section-1" className="min-h-screen flex items-center justify-center px-4 sm:px-8">

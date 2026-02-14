@@ -9,6 +9,8 @@ import { Header } from '../ui/Header';
 
 interface Props {
   onShowCode?: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
 interface Language {
@@ -164,17 +166,28 @@ Route::post('/data', function () {
 // Concurrency: Sync per request (usually), scalable via Process Forking (PHP-FPM)`
 };
 
-export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
+export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
   const [activeSection, setActiveSection] = useState(0);
-  const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeCodeLang, setActiveCodeLang] = useState('python');
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   // --- Scroll & Navigation Logic ---
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      // Small timeout to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
       if (!container) return;
@@ -184,20 +197,28 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
       const progress = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0;
       setScrollProgress(Math.min(progress, 100));
 
-      let activeSection = 0;
+      let activeSectionIndex = 0;
       for (let i = 0; i < sections.length; i++) {
         const element = document.getElementById(sections[i].id);
         if (element) {
           const rect = element.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
           if (rect.top < containerRect.top + containerRect.height / 2) {
-            activeSection = i;
+            activeSectionIndex = i;
           } else {
             break;
           }
         }
       }
-      setActiveSection(Math.min(activeSection, sections.length - 1));
+      setActiveSection(Math.min(activeSectionIndex, sections.length - 1));
+
+      // Emit granular progress
+      if (onProgress) {
+        onProgress({
+          sectionIndex: activeSectionIndex,
+          totalSections: sections.length
+        });
+      }
     };
 
     const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
@@ -210,32 +231,10 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
         container.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [sections.length, sections]);
+  }, [sections.length, sections, onProgress, initialSectionIndex, initialScrollDone]);
 
   // --- Keyboard "Gate" Logic ---
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        if (!gateUnlocked) {
-          e.preventDefault();
-          setGateUnlocked(true);
-          setShowInstructions(true);
-        } else if (showInstructions) {
-          setShowInstructions(false);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gateUnlocked, showInstructions]);
 
-  // --- Touch Unlock Logic ---
-  const handleTouchUnlock = () => {
-    if (!gateUnlocked) {
-      setGateUnlocked(true);
-      setShowInstructions(true);
-    }
-  };
 
   const toggleLang = (id: string) => {
     setSelectedLangs(prev => {
@@ -250,47 +249,7 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
     <div className="w-full">
 
       {/* --- Locked Gate Overlay --- */}
-      {!gateUnlocked && (
-        <div
-          className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer"
-          onClick={handleTouchUnlock}
-          onTouchStart={handleTouchUnlock}
-        >
-          <BounceAvatar className="w-24 h-24 mb-6 opacity-80" />
-          <h2 className="text-2xl font-bold text-rose-300 mb-2">Level 12: Backend Languages</h2>
 
-          {/* Desktop hint */}
-          <p className="text-slate-400 mb-8 animate-pulse hidden md:block">Use Arrow Keys to Initialize System</p>
-
-          {/* Mobile hint */}
-          <p className="text-slate-400 mb-8 animate-pulse md:hidden">Tap Anywhere to Start</p>
-
-          {/* Desktop arrow keys */}
-          <div className="hidden md:flex gap-4 text-xs font-mono text-slate-500">
-            <span className="border border-slate-700 p-2 rounded">↑</span>
-            <span className="border border-slate-700 p-2 rounded">↓</span>
-            <span className="border border-slate-700 p-2 rounded">←</span>
-            <span className="border border-slate-700 p-2 rounded">→</span>
-          </div>
-
-          {/* Mobile tap indicator */}
-          <div className="md:hidden flex flex-col items-center text-slate-500">
-            <div className="w-12 h-12 border-2 border-slate-700 rounded-full flex items-center justify-center animate-ping opacity-50"></div>
-            <span className="text-xs mt-4">TAP</span>
-          </div>
-        </div>
-      )}
-
-      {gateUnlocked && (
-        <GameInstructions
-          visible={showInstructions}
-          onDismiss={() => setShowInstructions(false)}
-          onShow={() => setShowInstructions(true)}
-          theme="rose"
-          title="How to Play"
-          subtitle="Use arrow keys to move. Bounce to enter the zone."
-        />
-      )}
 
 
       {/* --- Header Component --- */}
@@ -311,7 +270,7 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode }) => {
         }}
         progressHeight={scrollProgress}
         accentColor="rose"
-        isVisible={gateUnlocked}
+        isVisible={true}
       />
 
       {/* Page Architecture Modal */}

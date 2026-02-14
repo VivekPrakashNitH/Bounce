@@ -2,7 +2,18 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, Calculator, ArrowRight, Lock, Unlock, RefreshCw } from 'lucide-react';
 
-const RSADemo: React.FC = () => {
+interface Props {
+    onShowCode?: () => void;
+    onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+    initialSectionIndex?: number;
+}
+
+const RSADemo: React.FC<Props> = ({ onShowCode, onProgress }) => {
+    React.useEffect(() => {
+        if (onProgress) {
+            onProgress({ sectionIndex: 0, totalSections: 1 });
+        }
+    }, [onProgress]);
     const [phase, setPhase] = useState<'setup' | 'encrypt' | 'decrypt'>('setup');
     const [stepInfo, setStepInfo] = useState('');
 

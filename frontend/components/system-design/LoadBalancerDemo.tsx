@@ -9,26 +9,22 @@ import { ArchitectureInfo } from '../ui/ArchitectureInfo';
 
 interface Props {
   onShowCode: () => void;
+  onProgress?: (data: { sectionIndex: number; totalSections: number }) => void;
+  initialSectionIndex?: number;
 }
 
-export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
+export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode, onProgress, initialSectionIndex }) => {
   const [activeServer, setActiveServer] = useState<number | null>(null);
   const [requests, setRequests] = useState<{ id: number, target: number, x: number }[]>([]);
   const [reqCount, setReqCount] = useState(0);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
-  const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 });
-  const [ballVelocity, setBallVelocity] = useState({ dx: 0, dy: 0 });
-  const [ballRotation, setBallRotation] = useState(0);
-  const [ballVisible, setBallVisible] = useState(true);
-  const [keysPressed, setKeysPressed] = useState<Set<string>>(new Set());
-  const [hoveredAnimation, setHoveredAnimation] = useState<string | null>(null);
+
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
   const [completionProgress, setCompletionProgress] = useState(0);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const servers = [1, 2, 3];
   const levelData = COURSE_CONTENT.find(l => l.id === GameState.LEVEL_LOAD_BALANCER);
@@ -43,12 +39,7 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
   ];
 
   // --- Touch Unlock Logic ---
-  const handleTouchUnlock = () => {
-    if (!gateUnlocked) {
-      setGateUnlocked(true);
-      setTimeout(() => setShowInstructions(false), 1500);
-    }
-  };
+  const [hoveredAnimation, setHoveredAnimation] = useState<string | null>(null);
 
   const sendRequest = () => {
     if (!hasInteracted) setHasInteracted(true);
@@ -59,6 +50,17 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
   };
 
   useEffect(() => {
+    // Handle initial resume scroll
+    if (initialSectionIndex !== undefined && !initialScrollDone && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(sections[initialSectionIndex]?.id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          setInitialScrollDone(true);
+        }
+      }, 500);
+    }
+
     const handleScroll = () => {
       const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
       if (!container) return;
@@ -83,6 +85,10 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
         }
       }
       setCurrentSection(Math.min(activeSection, sections.length - 1));
+
+      if (onProgress) {
+        onProgress({ sectionIndex: activeSection, totalSections: sections.length });
+      }
     };
     const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
     if (container) {
@@ -94,92 +100,12 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
         container.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [sections.length, sections]);
 
-  useEffect(() => {
-    if (gateUnlocked) return;
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ([' ', 'Enter'].includes(e.key)) {
-        setGateUnlocked(true);
-      }
-    };
-    const handleMouseMove = (e: MouseEvent) => {
-      setBallPosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [gateUnlocked]);
+  }, [sections.length, sections, onProgress, initialSectionIndex, initialScrollDone]);
 
-  useEffect(() => {
-    if (!gateUnlocked || !showInstructions) return;
-    const handleInstructionClose = (e: KeyboardEvent) => {
-      if ([' ', 'Enter'].includes(e.key)) {
-        setShowInstructions(false);
-      }
-    };
-    window.addEventListener('keydown', handleInstructionClose);
-    return () => window.removeEventListener('keydown', handleInstructionClose);
-  }, [gateUnlocked, showInstructions]);
 
-  useEffect(() => {
-    if (!gateUnlocked) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-        setKeysPressed((prev) => new Set([...prev, e.key]));
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        setKeysPressed((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(e.key);
-          return newSet;
-        });
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [gateUnlocked]);
 
-  useEffect(() => {
-    if (!gateUnlocked || showInstructions) return;
-    const animationFrame = setInterval(() => {
-      setBallPosition((prev) => {
-        let newDx = 0;
-        let newDy = 0;
-        if (keysPressed.has('ArrowUp')) newDy -= 1.5;
-        if (keysPressed.has('ArrowDown')) newDy += 1.5;
-        if (keysPressed.has('ArrowLeft')) newDx -= 1.5;
-        if (keysPressed.has('ArrowRight')) newDx += 1.5;
-        setBallVelocity({ dx: newDx, dy: newDy });
-        let newX = prev.x + newDx;
-        let newY = prev.y + newDy;
-        newX = Math.max(5, Math.min(95, newX));
-        newY = Math.max(10, Math.min(90, newY));
-        if (newDx !== 0 || newDy !== 0) {
-          setBallRotation((prev) => (prev + 4) % 360);
-        }
-        return { x: newX, y: newY };
-      });
-    }, 30);
-    return () => clearInterval(animationFrame);
-  }, [keysPressed, gateUnlocked, showInstructions]);
 
-  useEffect(() => {
-    setBallVisible(currentSection !== 3);
-  }, [currentSection]);
 
   useEffect(() => {
     if (scrollProgress >= 90) {
@@ -211,72 +137,13 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode }) => {
 
 
       {/* GAME GATE */}
-      {!gateUnlocked && (
-        <div
-          className="fixed inset-0 z-50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
-          onClick={handleTouchUnlock}
-          onTouchStart={handleTouchUnlock}
-        >
-          <div className="absolute w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full shadow-[0_0_30px_rgba(74,222,128,0.8)] transition-all duration-100" style={{ left: `${ballPosition.x}%`, top: `${ballPosition.y}%`, transform: 'translate(-50%, -50%)' }}>
-            <div className="w-full h-full rounded-full animate-pulse" />
-          </div>
-          <div className="relative z-10 text-center flex flex-col items-center gap-6 sm:gap-8">
-            <div>
-              <h1 className="text-3xl sm:text-5xl font-bold text-white mb-2 tracking-tight">Level 2</h1>
-              <p className="text-base sm:text-lg text-slate-400 font-mono">Load Balancer</p>
-            </div>
-            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-green-400 flex items-center justify-center animate-spin" style={{ animationDuration: '4s' }}>
-              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-blue-500 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }} />
-            </div>
-            <div className="max-w-xs">
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4">Learn how systems distribute load and scale horizontally.</p>
 
-              {/* Desktop hint */}
-              <p className="text-slate-500 text-xs sm:text-sm font-mono hidden md:block">Press any arrow key or spacebar to begin</p>
-
-              {/* Mobile hint */}
-              <p className="text-slate-500 text-xs sm:text-sm font-mono md:hidden">Tap anywhere to begin</p>
-            </div>
-            <div className="flex gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-slate-400 text-xs sm:text-sm font-mono">Beginner+</span>
-            </div>
-
-            {/* Mobile tap indicator */}
-            <div className="md:hidden flex flex-col items-center text-slate-500 mt-4">
-              <div className="w-12 h-12 border-2 border-green-400/50 rounded-full flex items-center justify-center animate-ping opacity-50"></div>
-              <span className="text-xs mt-2 text-green-400">TAP</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* INSTRUCTION OVERLAY */}
-      {gateUnlocked && showInstructions && (
-        <div className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-500`}>
-          <div className="bg-slate-900 border-2 border-cyan-400/50 rounded-2xl p-6 sm:p-10 max-w-md w-full mx-4 text-center shadow-[0_0_40px_rgba(34,211,238,0.2)]">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">How to Play</h3>
-            <p className="text-slate-300 text-sm sm:text-base mb-8">Use <span className="text-cyan-400 font-semibold">arrow keys</span> to move the ball</p>
-            <div className="grid grid-cols-3 gap-3 mb-8 max-w-xs mx-auto">
-              <div className="flex justify-center"><div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">⬅️</div></div>
-              <div className="flex justify-center"><div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">⬆️</div></div>
-              <div className="flex justify-center"><div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">➡️</div></div>
-              <div className="flex justify-center col-start-2"><div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 border-2 border-slate-700 rounded-lg flex items-center justify-center text-cyan-400 font-bold text-lg">⬇️</div></div>
-            </div>
-            <p className="text-slate-500 text-xs sm:text-sm font-mono">Press any arrow key to continue</p>
-            <div className="mt-6 flex justify-center">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* FLOATING BALL */}
-      {gateUnlocked && (
-        <div className={`fixed w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full shadow-[0_0_20px_rgba(74,222,128,0.6)] z-30 transition-opacity duration-500 ${ballVisible ? 'opacity-100' : 'opacity-20 pointer-events-none'} ${keysPressed.size === 0 ? 'animate-bounce' : ''}`} style={{ left: `${ballPosition.x}%`, top: `${ballPosition.y}%`, transform: `translate(-50%, -50%) rotate(${ballRotation}deg)`, pointerEvents: 'none' }}>
-          <div className="w-full h-full rounded-full border-2 border-cyan-300/50 animate-pulse" />
-        </div>
-      )}
+
 
       {/* CODE PANEL */}
       {showCodePanel && (
@@ -383,7 +250,7 @@ function distributeRequest(request) {
         }}
         progressHeight={scrollProgress}
         accentColor="green"
-        isVisible={gateUnlocked}
+        isVisible={true}
       />
 
       {/* MAIN CONTENT */}
@@ -570,16 +437,7 @@ function distributeRequest(request) {
       {levelData && <ArchitectureInfo level={levelData} />}
 
       {/* INSTRUCTION OVERLAY */}
-      {gateUnlocked && (
-        <GameInstructions
-          visible={showInstructions}
-          onDismiss={() => setShowInstructions(false)}
-          onShow={() => setShowInstructions(true)}
-          theme="cyan"
-          title="How to Play"
-          subtitle="Use arrow keys to move. Bounce to enter the zone."
-        />
-      )}
+
 
       <style>{`
         @keyframes spin {
