@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, Send, MessageCircle, Lock, User as UserIcon, Calendar, ThumbsUp } from 'lucide-react';
 import { BounceAvatar } from '../ui/BounceAvatar';
@@ -15,6 +16,13 @@ interface Review {
     likes: number;
 }
 
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    avatar?: string;
+}
+
 export const ReviewsPage: React.FC = () => {
     const navigate = useNavigate();
     const [rating, setRating] = useState(0);
@@ -22,14 +30,25 @@ export const ReviewsPage: React.FC = () => {
     const [review, setReview] = useState('');
     const [suggestions, setSuggestions] = useState('');
     const [submitted, setSubmitted] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+    // Load user from local storage on mount
+    useEffect(() => {
+        const storedUser = localStorage.getItem('bounce_user');
+        if (storedUser) {
+            try {
+                setCurrentUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user from local storage", e);
+            }
+        }
+    }, []);
+
     const [reviews, setReviews] = useState<Review[]>(() => {
         const saved = localStorage.getItem('bounce_reviews');
         if (saved) return JSON.parse(saved);
-        // Mock data
-        return [
-            { id: '1', userId: 99, userName: 'Alex Chen', rating: 5, text: 'The visualization of the quadtree was super helpful! I finally understand how it works.', date: new Date(Date.now() - 86400000 * 2).toISOString(), likes: 12 },
-            { id: '2', userId: 98, userName: 'Sarah Jones', rating: 4, text: 'Great interactive demos. Would love to see more about Distributed Systems.', suggestions: 'Add consistent hashing demo!', date: new Date(Date.now() - 86400000 * 5).toISOString(), likes: 8 }
-        ];
+        return [];
     });
 
     const handleSubmit = (e: React.FormEvent) => {

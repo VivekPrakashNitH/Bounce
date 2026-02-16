@@ -9,33 +9,45 @@ import java.net.http.HttpResponse;
 
 @Service
 public class EmailService {
-    
+
     @Value("${BREVO_API_KEY:}")
     private String brevoApiKey;
-    
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    
+
     public void sendOtpEmail(String to, String otp) {
+        // Fallback for development/testing if no API key is set
+        if (brevoApiKey == null || brevoApiKey.isEmpty()) {
+            System.out.println("==================================================");
+            System.out.println("[DEV MODE] Email Service skipped (No API Key)");
+            System.out.println("[DEV MODE] Sending OTP to: " + to);
+            System.out.println("[DEV MODE] OTP CODE: " + otp);
+            System.out.println("==================================================");
+            return;
+        }
+
         try {
-            String jsonBody = String.format("""
-                {
-                    "sender": {"name": "Bounce", "email": "bouncebyvivekprakash@gmail.com"},
-                    "to": [{"email": "%s"}],
-                    "subject": "Your Bounce OTP Code",
-                    "htmlContent": "<h2>Your OTP for Bounce is: <strong>%s</strong></h2><p>This OTP is valid for 10 minutes.</p><p>If you didn't request this, please ignore this email.</p>"
-                }
-                """, to, otp);
-            
+            String jsonBody = String.format(
+                    """
+                            {
+                                "sender": {"name": "Bounce", "email": "bouncebyvivekprakash@gmail.com"},
+                                "to": [{"email": "%s"}],
+                                "subject": "Your Bounce OTP Code",
+                                "htmlContent": "<h2>Your OTP for Bounce is: <strong>%s</strong></h2><p>This OTP is valid for 10 minutes.</p><p>If you didn't request this, please ignore this email.</p>"
+                            }
+                            """,
+                    to, otp);
+
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
-                .header("api-key", brevoApiKey)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
-            
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("api-key", brevoApiKey)
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
+
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.println("[INFO] OTP email sent successfully to: " + to);
             } else {
@@ -47,28 +59,40 @@ public class EmailService {
             throw new RuntimeException("Failed to send OTP email", e);
         }
     }
-    
+
     public void sendPasswordResetEmail(String to, String otp) {
+        // Fallback for development/testing if no API key is set
+        if (brevoApiKey == null || brevoApiKey.isEmpty()) {
+            System.out.println("==================================================");
+            System.out.println("[DEV MODE] Email Service skipped (No API Key)");
+            System.out.println("[DEV MODE] Sending Password Reset OTP to: " + to);
+            System.out.println("[DEV MODE] OTP CODE: " + otp);
+            System.out.println("==================================================");
+            return;
+        }
+
         try {
-            String jsonBody = String.format("""
-                {
-                    "sender": {"name": "Bounce", "email": "bouncebyvivekprakash@gmail.com"},
-                    "to": [{"email": "%s"}],
-                    "subject": "Bounce Password Reset OTP",
-                    "htmlContent": "<h2>Your password reset OTP is: <strong>%s</strong></h2><p>This OTP is valid for 10 minutes.</p><p>If you didn't request a password reset, please ignore this email.</p>"
-                }
-                """, to, otp);
-            
+            String jsonBody = String.format(
+                    """
+                            {
+                                "sender": {"name": "Bounce", "email": "bouncebyvivekprakash@gmail.com"},
+                                "to": [{"email": "%s"}],
+                                "subject": "Bounce Password Reset OTP",
+                                "htmlContent": "<h2>Your password reset OTP is: <strong>%s</strong></h2><p>This OTP is valid for 10 minutes.</p><p>If you didn't request a password reset, please ignore this email.</p>"
+                            }
+                            """,
+                    to, otp);
+
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
-                .header("api-key", brevoApiKey)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
-            
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("api-key", brevoApiKey)
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
+
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.println("[INFO] Password reset email sent to: " + to);
             } else {

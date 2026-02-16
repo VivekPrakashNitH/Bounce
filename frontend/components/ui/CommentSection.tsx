@@ -95,7 +95,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
   // Delete a comment
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this comment?')) return;
-    
+
     try {
       await levelCommentApi.deleteComment(id);
       setComments(comments.filter(c => c.id !== id));
@@ -114,10 +114,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
   // Save edited comment
   const saveEdit = async (id: number) => {
     if (!editText.trim()) return;
-    
+
     try {
       // For now, we'll update locally since backend might not have update endpoint
-      setComments(comments.map(c => 
+      setComments(comments.map(c =>
         c.id === id ? { ...c, content: editText.trim(), updatedAt: new Date().toISOString() } : c
       ));
       setEditingId(null);
@@ -188,8 +188,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
               <h4 className="text-white font-bold text-sm sm:text-base mb-1">Join the conversation</h4>
               <p className="text-[10px] sm:text-xs text-zinc-500">Sign in to share your thoughts.</p>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setShowAuthModal(true)}
               className="flex items-center gap-2 sm:gap-3 bg-emerald-600 hover:bg-emerald-500 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all active:scale-95 shadow-lg"
             >
@@ -212,8 +212,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
 
             <div className="flex-1">
               <div className="flex gap-2 mb-2">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handlePost()}
@@ -221,7 +221,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-zinc-600"
                   disabled={posting}
                 />
-                <button 
+                <button
                   onClick={handlePost}
                   disabled={!newComment.trim() || posting}
                   className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 rounded-lg transition-colors flex items-center justify-center"
@@ -261,12 +261,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-zinc-300">{c.author}</span>
-                      <span className="text-[10px] text-zinc-600">â€¢ {formatDate(c.createdAt)}</span>
+                      {/* Timestamp removed as requested */}
                       {c.updatedAt !== c.createdAt && (
                         <span className="text-[10px] text-zinc-600 italic">(edited)</span>
                       )}
                     </div>
-                    
+
                     {/* Edit/Delete buttons for owner */}
                     {isOwner(c) && editingId !== c.id && (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -287,7 +287,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Comment content or edit input */}
                   {editingId === c.id ? (
                     <div className="flex gap-2 items-center">
@@ -326,7 +326,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ levelId }) => {
       </div>
 
       {/* Auth Modal */}
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
