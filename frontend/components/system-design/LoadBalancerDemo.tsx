@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Activity, Globe, Server, Code2, MousePointerClick, Zap } from 'lucide-react';
-import { BounceAvatar, SidebarNav, GameInstructions } from '../ui';
+import { BounceAvatar, SidebarNav, GameInstructions, GateKeeper } from '../ui';
 import { Header } from '../ui/Header';
 import { COURSE_CONTENT } from '../../data/courseContent';
 import { GameState } from '../../types';
@@ -20,6 +20,7 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode, onProgress, init
   const [hasInteracted, setHasInteracted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
+  const [gateUnlocked, setGateUnlocked] = useState(false);
 
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [showPageMadeModal, setShowPageMadeModal] = useState(false);
@@ -137,12 +138,24 @@ export const LoadBalancerDemo: React.FC<Props> = ({ onShowCode, onProgress, init
 
 
       {/* GAME GATE */}
-
-
-      {/* INSTRUCTION OVERLAY */}
+      {!gateUnlocked && (
+        <GateKeeper
+          title="Level 2"
+          subtitle="Load Balancer"
+          description="Learn how systems distribute traffic across multiple servers."
+          difficulty="Beginner+"
+          theme="space"
+          onUnlock={() => setGateUnlocked(true)}
+        />
+      )}
 
 
       {/* FLOATING BALL */}
+      {gateUnlocked && (
+        <div className="fixed z-30 pointer-events-none">
+          <BounceAvatar className="w-4 h-4 opacity-70" />
+        </div>
+      )}
 
 
       {/* CODE PANEL */}

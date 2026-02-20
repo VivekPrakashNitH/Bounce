@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { TrendingUp, ArrowUpDown, Zap } from 'lucide-react';
-import { BounceAvatar, SidebarNav, PageMadeModal, GearButton } from '../ui';
+import { BounceAvatar, SidebarNav, PageMadeModal, GearButton, GateKeeper } from '../ui';
 import { Header } from '../ui/Header';
 
 interface Props {
@@ -23,8 +23,6 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode, onProgress, ini
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
   const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [keysPressed, setKeysPressed] = useState<Set<string>>(new Set());
   const [ballVisible, setBallVisible] = useState(true);
   const [completionProgress, setCompletionProgress] = useState(0);
   const [buyOrders, setBuyOrders] = useState<Order[]>([]);
@@ -51,12 +49,6 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode, onProgress, ini
     { label: 'Applications', description: 'Exchanges, esports' },
   ];
 
-  const handleTouchUnlock = () => {
-    if (!gateUnlocked) {
-      setGateUnlocked(true);
-      setTimeout(() => setShowInstructions(false), 1500);
-    }
-  };
 
   useEffect(() => {
     // Handle initial resume scroll
@@ -101,40 +93,17 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode, onProgress, ini
         onProgress({ sectionIndex: activeSection, totalSections: sectionsList.length });
       }
     };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-        if (!gateUnlocked) {
-          setGateUnlocked(true);
-          setShowInstructions(true);
-        } else if (showInstructions) {
-          setShowInstructions(false);
-        }
-        setKeysPressed(prev => new Set([...prev, e.key]));
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      setKeysPressed(prev => {
-        const next = new Set(prev);
-        next.delete(e.key);
-        return next;
-      });
-    };
     const container = document.querySelector('.overflow-y-auto.custom-scrollbar');
     if (container) {
       container.addEventListener('scroll', handleScroll);
       handleScroll(); // Initial check
     }
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
     return () => {
       if (container) {
         container.removeEventListener('scroll', handleScroll);
       }
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gateUnlocked, showInstructions, onProgress, initialSectionIndex, initialScrollDone]);
+  }, [onProgress, initialSectionIndex, initialScrollDone]);
 
   useEffect(() => {
     setBallVisible(currentSection !== 3);
@@ -216,57 +185,17 @@ export const OrderMatchingDemo: React.FC<Props> = ({ onShowCode, onProgress, ini
       />
 
       {!gateUnlocked && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center cursor-pointer"
-          onClick={handleTouchUnlock}
-          onTouchStart={handleTouchUnlock}
-        >
-          <div className="text-center">
-            <BounceAvatar className="w-32 h-32 mx-auto mb-6 opacity-80" />
-            <p className="text-slate-300 text-lg mb-4 hidden md:block">Press any arrow key to unlock</p>
-            <p className="text-slate-300 text-lg mb-4 md:hidden">Tap anywhere to unlock</p>
-            <div className="flex gap-3 justify-center opacity-60 text-sm hidden md:flex">
-              <span>UP</span>
-              <span>DOWN</span>
-              <span>LEFT</span>
-              <span>RIGHT</span>
-            </div>
-            <div className="md:hidden flex flex-col items-center text-slate-500 mt-4">
-              <div className="w-12 h-12 border-2 border-yellow-400/50 rounded-full flex items-center justify-center animate-ping opacity-50"></div>
-              <span className="text-xs mt-2 text-yellow-400">TAP</span>
-            </div>
-          </div>
-        </div>
+        <GateKeeper
+          title="Level G06"
+          subtitle="Order Matching"
+          description="Discover how trading platforms match buy and sell orders efficiently."
+          difficulty="Advanced"
+          theme="nature"
+          onUnlock={() => setGateUnlocked(true)}
+        />
       )}
 
-      {gateUnlocked && showInstructions && (
-        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center animate-fade-in">
-          <div className="bg-slate-800 border border-yellow-500/30 rounded-xl p-8 max-w-sm mx-2">
-            <h3 className="text-lg font-bold text-yellow-300 mb-4">Use Arrow Keys</h3>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="p-3 bg-slate-700/50 rounded text-center">
-                <p className="text-xs font-bold mb-1">UP</p>
-                <p className="text-xs text-slate-400">Scroll</p>
-              </div>
-              <div className="p-3 bg-slate-700/50 rounded text-center">
-                <p className="text-xs font-bold mb-1">DOWN</p>
-                <p className="text-xs text-slate-400">Scroll</p>
-              </div>
-              <div className="p-3 bg-slate-700/50 rounded text-center">
-                <p className="text-xs font-bold mb-1">LEFT</p>
-                <p className="text-xs text-slate-400">Move</p>
-              </div>
-              <div className="p-3 bg-slate-700/50 rounded text-center">
-                <p className="text-xs font-bold mb-1">RIGHT</p>
-                <p className="text-xs text-slate-400">Move</p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-400 text-center">Press any key to continue</p>
-          </div>
-        </div>
-      )}
-
-      {ballVisible && gateUnlocked && !showInstructions && (
+      {ballVisible && gateUnlocked && (
         <div className="fixed z-30 pointer-events-none">
           <BounceAvatar className="w-4 h-4 opacity-70" />
         </div>

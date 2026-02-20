@@ -19,6 +19,20 @@ services:
     networks:
       - curious-network
 
+  # Redis for OTP storage & rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: curious-sys-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - curious-network
+
   # Spring Boot Backend
   backend:
     build:
@@ -34,9 +48,17 @@ services:
       DB_NAME: curioussys
       DB_USER: postgres
       DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-bounce-dev-secret-change-in-production-must-be-64-chars-minimum-ok}
+
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      APP_CORS_ORIGINS: http://localhost:5173,http://localhost:3000
       APP_FRONTEND_URL: http://localhost:5173
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - curious-network

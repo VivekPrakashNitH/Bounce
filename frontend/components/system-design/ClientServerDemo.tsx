@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Laptop, Database, ArrowRight, ArrowLeft, Code2, MousePointerClick } from 'lucide-react';
-import { BounceAvatar, SidebarNav, AnimatedBackground } from '../ui';
+import { BounceAvatar, SidebarNav, AnimatedBackground, GateKeeper } from '../ui';
 import { Header } from '../ui/Header';
 import { ArchitectureInfo } from '../ui/ArchitectureInfo';
 import { COURSE_CONTENT } from '../../data/courseContent';
@@ -25,6 +25,7 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode, onProgress, init
   const [levelComplete, setLevelComplete] = useState(false);
   const [completionProgress, setCompletionProgress] = useState(0);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const [gateUnlocked, setGateUnlocked] = useState(false);
 
   const sections = [
     { id: 'section-1', label: 'Model' },
@@ -34,9 +35,6 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode, onProgress, init
     { id: 'section-5', label: 'Response' },
     { id: 'section-6', label: 'Implications' },
   ];
-
-  // --- Touch Unlock Logic ---
-
 
   // --- Scroll & Navigation Logic ---
   useEffect(() => {
@@ -139,8 +137,17 @@ export const ClientServerDemo: React.FC<Props> = ({ onShowCode, onProgress, init
       {/* Animated Doodle Background */}
       <AnimatedBackground variant="code" opacity={6} />
 
-      {/* GAME GATE OVERLAY */}
-
+      {/* GATE KEEPER */}
+      {!gateUnlocked && (
+        <GateKeeper
+          title="Level 1"
+          subtitle="Client-Server Model"
+          description="Understand how the internet works at the foundational level."
+          difficulty="Beginner"
+          theme="space"
+          onUnlock={() => setGateUnlocked(true)}
+        />
+      )}
 
       {/* CODE EXPLANATION PANEL */}
       {showCodePanel && (

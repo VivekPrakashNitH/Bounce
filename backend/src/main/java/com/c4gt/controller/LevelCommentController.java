@@ -13,24 +13,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/level-comments")
-@CrossOrigin(origins = "*")
 public class LevelCommentController {
-    
+
     @Autowired
     private LevelCommentService levelCommentService;
-    
+
     @GetMapping("/{levelId}")
     public ResponseEntity<List<LevelCommentDTO>> getCommentsByLevel(@PathVariable String levelId) {
         List<LevelCommentDTO> comments = levelCommentService.getCommentsByLevelId(levelId);
         return ResponseEntity.ok(comments);
     }
-    
+
     @PostMapping
     public ResponseEntity<LevelCommentDTO> createComment(@Valid @RequestBody CreateLevelCommentRequest request) {
         LevelCommentDTO created = levelCommentService.createComment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
         try {

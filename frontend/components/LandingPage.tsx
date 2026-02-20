@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Play, Layers, Brain, Terminal, ArrowRight, Code, LineChart, Bot, Lock, MessageCircle, X, RotateCw, Mail, RotateCcw, Gamepad2, ShieldAlert } from 'lucide-react';
+import { Play, Layers, Brain, Terminal, ArrowRight, Code, LineChart, Lock, RotateCw, Mail, RotateCcw, Gamepad2, ShieldAlert } from 'lucide-react';
 import { BounceAvatar } from './BounceAvatar';
-import { ChatBubble } from './ChatBubble';
 import { COURSE_CONTENT } from '../data/courseContent';
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQuiz, onStartGameDev, onStartCyber }) => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
+
     const [isPortraitMobile, setIsPortraitMobile] = useState(false);
     const [completedLevels, setCompletedLevels] = useState<string[]>([]);
 
@@ -78,10 +77,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
                     <a href="mailto:vivekprakashydvofficial@gmail.com" className="flex items-center gap-1 text-[8px] sm:text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">
                         <Mail size={8} /> <span className="hidden sm:inline">vivekprakashydvofficial@gmail.com</span><span className="sm:hidden">Email</span>
                     </a>
-                    <div className="mt-1 px-2 sm:px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-1 sm:gap-2">
-                        <Bot size={10} className="text-green-400" />
-                        <span className="text-[8px] sm:text-[10px] text-zinc-400 font-bold tracking-wider">POWERED BY PUTER.AI</span>
-                    </div>
+
                 </div>
             </div>
 
@@ -170,17 +166,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
 
             </div>
 
-            <div className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 z-[200] flex flex-col items-end">
-                <div className="relative">
-                    <ChatBubble isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-                </div>
-                <button
-                    onClick={() => setIsChatOpen(!isChatOpen)}
-                    className="bg-white hover:bg-zinc-200 text-black p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 border border-zinc-400 flex items-center justify-center animate-bounce"
-                >
-                    {isChatOpen ? <X size={20} /> : <MessageCircle size={20} />}
-                </button>
-            </div>
+
 
             <div className="absolute bottom-4 flex flex-col items-center gap-1 text-zinc-600 z-10 pointer-events-none">
                 <div className="text-[10px] font-mono tracking-widest uppercase opacity-50">

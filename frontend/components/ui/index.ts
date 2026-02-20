@@ -1,6 +1,5 @@
 // UI Components
 export { BounceAvatar } from './BounceAvatar';
-export { ChatBubble } from './ChatBubble';
 export { CodeViewer } from './CodeViewer';
 export { CommentSection } from './CommentSection';
 export { QuizModal } from './QuizModal';
@@ -15,6 +14,7 @@ export { GearButton } from './GearButton';
 export { LevelComplete } from './LevelComplete';
 export { AnimatedBackground } from './AnimatedBackground';
 export { GameInstructions } from './GameInstructions';
+export { GateKeeper } from './GateKeeper';
 
 // Types
 export type { AccentColor } from './Header';

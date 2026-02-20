@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { MessageCircle, Map, X, GraduationCap, Home, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, User } from 'lucide-react';
-import { BounceAvatar, ChatBubble, CodeViewer, CommentSection, QuizModal, UniversalSystemDemo } from './components/ui';
+import { Map, X, GraduationCap, Home, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, User } from 'lucide-react';
+import { BounceAvatar, CodeViewer, CommentSection, QuizModal, UniversalSystemDemo } from './components/ui';
 import { ProfileModal, AuthModal } from './components/pages';
 import { LoadBalancerDemo, ClientServerDemo, ApiGatewayDemo, DatabaseShardingDemo, CachingDemo, DockerDemo, MessageQueueDemo, BackendLanguagesDemo, HldLldExplainer, DbInternalsDemo, FullStackHowTo, ConsistentHashingDemo, DbMigrationDemo, DevOpsLoopDemo } from './components/system-design';
 import { UrlShortenerDemo, InstagramDemo, UberDemo, QuadtreeVisualizer } from './components/case-studies';
@@ -46,7 +46,7 @@ export const CourseExperience: React.FC = () => {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(() => Math.max(trackLevels.indexOf(initialLevelId ?? trackLevels[0]), 0));
   const [subLevelProgress, setSubLevelProgress] = useState(0); // 0 to 1 ratio
   const [storedSectionIndex, setStoredSectionIndex] = useState<number | undefined>(undefined);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+
 
   const persistenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -105,11 +105,7 @@ export const CourseExperience: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const handleOpenChat = () => setIsChatOpen(true);
-    window.addEventListener('openBounceChat', handleOpenChat);
-    return () => window.removeEventListener('openBounceChat', handleOpenChat);
-  }, []);
+
 
   useEffect(() => {
     if (!trackId || !trackLevels.length) return;
@@ -152,7 +148,7 @@ export const CourseExperience: React.FC = () => {
     window.addEventListener('keyup', handleKeyUp);
 
     const gameLoop = setInterval(() => {
-      if (isChatOpen || gameState !== GameState.PLAYGROUND || activeSnippet || showQuiz || showProfile) return;
+      if (gameState !== GameState.PLAYGROUND || activeSnippet || showQuiz || showProfile) return;
 
       const isUp = keysPressed.current.has('ArrowUp') || virtualKeys.current.has('ArrowUp');
       const isDown = keysPressed.current.has('ArrowDown') || virtualKeys.current.has('ArrowDown');
@@ -246,7 +242,7 @@ export const CourseExperience: React.FC = () => {
       window.removeEventListener('keyup', handleKeyUp);
       clearInterval(gameLoop);
     };
-  }, [isChatOpen, gameState, activeSnippet, showQuiz, showProfile, trackId, trackLevels, currentLevelIndex, navigate]);
+  }, [gameState, activeSnippet, showQuiz, showProfile, trackId, trackLevels, currentLevelIndex, navigate]);
 
   const currentLevelId = trackLevels[currentLevelIndex];
   const currentLevel = useMemo(() => COURSE_CONTENT.find(l => l.id === currentLevelId), [currentLevelId]);
@@ -621,7 +617,7 @@ export const CourseExperience: React.FC = () => {
           className="absolute transition-transform duration-75 linear z-[100]"
           style={{ transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg)`, pointerEvents: 'auto' }}
         >
-          <div className="relative group cursor-pointer" onClick={() => setIsChatOpen(!isChatOpen)}>
+          <div className="relative group cursor-pointer">
             <BounceAvatar className="w-14 h-14 sm:w-20 sm:h-20" />
           </div>
         </div>

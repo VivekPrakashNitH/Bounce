@@ -564,9 +564,7 @@ export const BackendLanguagesDemo: React.FC<Props> = ({ onShowCode, onProgress, 
             </div>
           </div>
 
-          <button className="px-8 py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-full font-bold shadow-lg shadow-rose-900/40 transition-all hover:scale-105">
-            Complete Module
-          </button>
+
         </div>
       </section>
 

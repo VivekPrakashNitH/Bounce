@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Layers, Brain, Terminal, ArrowRight, Code, LineChart, Bot, Lock, MessageCircle, X, Mail, RotateCcw, Gamepad2, ShieldAlert } from 'lucide-react';
 import { BounceAvatar } from '../ui/BounceAvatar';
-import { ChatBubble } from '../ui/ChatBubble';
+
 import { COURSE_CONTENT } from '../../data/courseContent';
 import { fullResetTrack, readCompletedLevels } from '../../routing/progress';
 import { TrackId } from '../../routing/tracks';

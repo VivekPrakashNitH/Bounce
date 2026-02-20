@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pingboard-db
+    environment:
+      POSTGRES_DB: pingboard
+      POSTGRES_USER: ${DB_USER:-pingboard}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pingboard}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pingboard-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: pingboard-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pingboard-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pingboard-backend
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pingboard
+      DB_USER: ${DB_USER:-pingboard}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-CHANGE_ME_IN_PRODUCTION_32_CHARS_MIN}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5174}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pingboard-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8081/api
+    container_name: pingboard-frontend
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - pingboard-net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  pingboard-net:
+    driver: bridge
