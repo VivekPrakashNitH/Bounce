@@ -5,6 +5,7 @@ import { Float, Edges } from '@react-three/drei';
 import { ArrowDown, MousePointer2 } from 'lucide-react';
 import { BounceAvatar } from '../ui/BounceAvatar';
 import * as THREE from 'three';
+import { useNavigate } from 'react-router-dom';
 
 // --- 3D Components ---
 
@@ -116,7 +117,7 @@ const Scene = () => {
 // --- Page Sections ---
 
 interface Props {
-   onComplete: () => void;
+   onComplete?: () => void;
 }
 
 export const BeCuriousIntro: React.FC<Props> = ({ onComplete }) => {

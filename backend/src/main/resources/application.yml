@@ -1,9 +1,17 @@
 server:
   port: 8080
+  shutdown: graceful  # Wait for in-flight requests to complete
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: application/json,application/xml,text/html,text/plain,text/css,application/javascript
+
 
 spring:
   application:
     name: bounce-backend
+  lifecycle:
+    timeout-per-shutdown-phase: 30s  # Max wait during shutdown
 
   # PostgreSQL
   datasource:
@@ -15,6 +23,10 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
+      idle-timeout: 600000           # 10 min — close idle connections
+      max-lifetime: 1800000          # 30 min — recycle connections
+      leak-detection-threshold: 60000  # Log warning if connection not returned in 60s
+      connection-test-query: SELECT 1
 
   # JPA — validate only, Flyway owns the schema
   jpa:
@@ -25,6 +37,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+    open-in-view: false  # Prevent lazy loading outside transactions
 
   # Flyway migrations
   flyway:
@@ -64,18 +77,26 @@ app:
 brevo:
   api-key: ${BREVO_API_KEY:}
 
-# Actuator
+# Actuator — health checks, metrics, info, prometheus
 management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        include: health,metrics,info,prometheus
   endpoint:
     health:
       show-details: when-authorized
+      show-components: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 logging:
   level:
     com.c4gt: INFO
     org.springframework.web: WARN
     org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.stat: WARN
+

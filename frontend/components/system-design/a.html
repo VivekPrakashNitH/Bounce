@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <iframe id="player" width="640" height="390" src="https://www.youtube.com/embed/jiCUWcZBZXY?enablejsapi=1&start=80"
+        frameborder="0" allow="autoplay" allowfullscreen>
+    </iframe>
+
+    <script>
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                events: {
+                    'onStateChange': function (event) {
+                        if (player.getCurrentTime() >= 88) {
+                            player.seekTo(80);
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+</body>
+
+</html>

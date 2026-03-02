@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -40,6 +41,7 @@ public class JwtTokenProvider {
     private String buildToken(Long userId, String email, String type, long expirationMs) {
         Date now = new Date();
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("type", type)
@@ -60,6 +62,16 @@ public class JwtTokenProvider {
 
     public String getTokenType(String token) {
         return parseToken(token).get("type", String.class);
+    }
+
+    public String getJtiFromToken(String token) {
+        return parseToken(token).getId();
+    }
+
+    /** Remaining time until token expires (ms). For blacklist TTL. */
+    public long getRemainingExpiry(String token) {
+        Date exp = parseToken(token).getExpiration();
+        return Math.max(0, exp.getTime() - System.currentTimeMillis());
     }
 
     public boolean validateToken(String token) {

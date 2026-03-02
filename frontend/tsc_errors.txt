@@ -1,0 +1,22 @@
+﻿components/Cybersecurity/AESDemo.tsx(2,10): error TS2305: Module '"framer-motion"' has no exported member 'motion'.
+components/Cybersecurity/AESDemo.tsx(2,18): error TS2305: Module '"framer-motion"' has no exported member 'AnimatePresence'.
+components/Cybersecurity/BcryptDemo.tsx(2,10): error TS2305: Module '"framer-motion"' has no exported member 'motion'.
+components/Cybersecurity/RSADemo.tsx(2,10): error TS2305: Module '"framer-motion"' has no exported member 'motion'.
+components/Cybersecurity/RSADemo.tsx(2,18): error TS2305: Module '"framer-motion"' has no exported member 'AnimatePresence'.
+components/Cybersecurity/SHADemo.tsx(2,10): error TS2305: Module '"framer-motion"' has no exported member 'motion'.
+components/pages/BeCuriousIntro.tsx(2,10): error TS2305: Module '"framer-motion"' has no exported member 'motion'.
+components/pages/BeCuriousIntro.tsx(2,18): error TS2305: Module '"framer-motion"' has no exported member 'useScroll'.
+components/pages/BeCuriousIntro.tsx(2,29): error TS2305: Module '"framer-motion"' has no exported member 'useTransform'.
+components/pages/BeCuriousIntro.tsx(2,43): error TS2305: Module '"framer-motion"' has no exported member 'useSpring'.
+components/pages/BeCuriousIntro.tsx(26,4): error TS2339: Property 'mesh' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(27,7): error TS2339: Property 'boxGeometry' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(28,7): error TS2339: Property 'meshStandardMaterial' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(31,4): error TS2339: Property 'mesh' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(41,4): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(47,4): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(94,7): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(98,7): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(105,10): error TS2339: Property 'ambientLight' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(107,10): error TS2339: Property 'spotLight' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(109,10): error TS2339: Property 'spotLight' does not exist on type 'JSX.IntrinsicElements'.
+components/pages/BeCuriousIntro.tsx(111,10): error TS2339: Property 'pointLight' does not exist on type 'JSX.IntrinsicElements'.

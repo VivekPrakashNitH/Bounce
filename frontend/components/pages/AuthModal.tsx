@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { authApi, AuthResponse } from '../../services/apiService';
+import { authApi, LegacyAuthResponse as AuthResponse } from '../../services/api';
 
-type AuthStep = 
+type AuthStep =
   | 'initial'           // Choose login or register
   | 'login'             // Email + password login
   | 'register-email'    // Enter email for registration

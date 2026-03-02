@@ -1,0 +1,86 @@
+# Prometheus Alerting Rules for BeCurious Platform
+
+groups:
+  - name: becurious-critical
+    rules:
+      # ── CRITICAL ──────────────────────────────────────
+      - alert: HighErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx error rate > 1% for 5 minutes"
+          description: "Current error rate: {{ $value | humanizePercentage }}"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "p99 latency > 2s for 5 minutes"
+          description: "Current p99: {{ $value | humanizeDuration }}"
+
+      - alert: DatabaseDown
+        expr: hikaricp_connections_active == 0 and hikaricp_connections_pending > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool: 0 active, pending requests queued"
+
+  - name: becurious-warning
+    rules:
+      # ── WARNING ───────────────────────────────────────
+      - alert: DBPoolHighUtilization
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB connection pool utilization > 80%"
+          description: "Active: {{ with query \"hikaricp_connections_active\" }}{{ . | first | value }}{{ end }}/{{ with query \"hikaricp_connections_max\" }}{{ . | first | value }}{{ end }}"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage > 80%"
+
+      - alert: HighRateLimitRejections
+        expr: sum(rate(rate_limit_rejections_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limiter rejecting > 10 req/min — possible abuse"
+
+      - alert: JVMHeapHigh
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM heap usage > 85%"
+
+  - name: becurious-info
+    rules:
+      # ── INFO ──────────────────────────────────────────
+      - alert: EngagementQueueBacklog
+        expr: engagement_queue_size > 200
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "Engagement event queue backlog > 200"
+
+      - alert: SlowQueryDetected
+        expr: increase(slow_query_count_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "Slow query (>100ms) detected in the last 5 minutes"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Send, LogOut, Loader2, Trash2, Edit2, Check, X } from 'lucide-react';
-import { levelCommentApi, LevelComment } from '../../services/apiService';
+import { levelCommentApi, LevelComment } from '../../services/api';
 import { AuthModal } from '../pages/AuthModal';
 
 interface CommentSectionProps {

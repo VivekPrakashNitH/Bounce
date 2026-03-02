@@ -1,0 +1,313 @@
+diff --git a/backend/Dockerfile b/backend/Dockerfile
+index 4cba036..be2b2ef 100644
+--- a/backend/Dockerfile
++++ b/backend/Dockerfile
+@@ -1,11 +1,26 @@
+-FROM maven:3.9-eclipse-temurin-17 AS build
++# ── Stage 1: Build ──────────────────────────────────
++FROM eclipse-temurin:17-jdk-alpine AS build
+ WORKDIR /app
+ COPY pom.xml .
++COPY .mvn .mvn
++COPY mvnw .
++RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+ COPY src ./src
+-RUN mvn clean package -DskipTests
++RUN ./mvnw package -DskipTests -B
+ 
++# ── Stage 2: Runtime ────────────────────────────────
+ FROM eclipse-temurin:17-jre-alpine
+ WORKDIR /app
+-COPY --from=build /app/target/discussion-backend-1.0.0.jar app.jar
++
++# Security: non-root user
++RUN addgroup -S appgroup && adduser -S appuser -G appgroup
++USER appuser
++
++COPY --from=build /app/target/*.jar app.jar
++
+ EXPOSE 8080
+-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
++
++# JVM tuning for containers
++ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
++
++ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+diff --git a/backend/pom.xml b/backend/pom.xml
+index 62f6e47..54aac56 100644
+--- a/backend/pom.xml
++++ b/backend/pom.xml
+@@ -90,6 +90,20 @@
+             <artifactId>spring-boot-starter-test</artifactId>
+             <scope>test</scope>
+         </dependency>
++
++        <!-- H2 in-memory database for tests -->
++        <dependency>
++            <groupId>com.h2database</groupId>
++            <artifactId>h2</artifactId>
++            <scope>test</scope>
++        </dependency>
++
++        <!-- Spring Security Test (MockMvc + @WithMockUser) -->
++        <dependency>
++            <groupId>org.springframework.security</groupId>
++            <artifactId>spring-security-test</artifactId>
++            <scope>test</scope>
++        </dependency>
+         
+         <!-- Spring Boot Security -->
+         <dependency>
+@@ -127,6 +141,13 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-oauth2-client</artifactId>
+         </dependency>
++
++        <!-- Structured JSON Logging (Logstash Logback Encoder) -->
++        <dependency>
++            <groupId>net.logstash.logback</groupId>
++            <artifactId>logstash-logback-encoder</artifactId>
++            <version>7.4</version>
++        </dependency>
+     </dependencies>
+     
+     <build>
+diff --git a/backend/src/main/java/com/c4gt/exception/GlobalExceptionHandler.java b/backend/src/main/java/com/c4gt/exception/GlobalExceptionHandler.java
+index 22a2d2e..82a8db0 100644
+--- a/backend/src/main/java/com/c4gt/exception/GlobalExceptionHandler.java
++++ b/backend/src/main/java/com/c4gt/exception/GlobalExceptionHandler.java
+@@ -1,38 +1,96 @@
+ package com.c4gt.exception;
+ 
++import com.c4gt.dto.ApiError;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.ResponseEntity;
++import org.springframework.http.converter.HttpMessageNotReadableException;
++import org.springframework.security.access.AccessDeniedException;
++import org.springframework.web.HttpRequestMethodNotSupportedException;
+ import org.springframework.web.bind.MethodArgumentNotValidException;
++import org.springframework.web.bind.MissingServletRequestParameterException;
+ import org.springframework.web.bind.annotation.ExceptionHandler;
+ import org.springframework.web.bind.annotation.RestControllerAdvice;
++import org.springframework.web.servlet.NoHandlerFoundException;
+ 
+-import java.util.Map;
+ import java.util.stream.Collectors;
+ 
++/**
++ * Centralized exception handler returning standardized ApiError responses.
++ * Every error from the API follows: { status, code, message, details?,
++ * timestamp }.
++ */
+ @RestControllerAdvice
+ public class GlobalExceptionHandler {
+ 
+     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+ 
++    // --- 400 Bad Request ---
++
+     @ExceptionHandler(MethodArgumentNotValidException.class)
+-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+-        String errors = ex.getBindingResult().getFieldErrors().stream()
++    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
++        String details = ex.getBindingResult().getFieldErrors().stream()
+                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
+-                .collect(Collectors.joining(", "));
+-        return ResponseEntity.badRequest().body(Map.of("error", errors));
++                .collect(Collectors.joining("; "));
++        ApiError error = new ApiError(400, "VALIDATION_ERROR", "Request validation failed", details);
++        return ResponseEntity.badRequest().body(error);
+     }
+ 
+     @ExceptionHandler(IllegalArgumentException.class)
+-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+-        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
++    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
++        ApiError error = new ApiError(400, "BAD_REQUEST", ex.getMessage());
++        return ResponseEntity.badRequest().body(error);
++    }
++
++    @ExceptionHandler(HttpMessageNotReadableException.class)
++    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex) {
++        ApiError error = new ApiError(400, "MALFORMED_REQUEST", "Request body is malformed or missing");
++        return ResponseEntity.badRequest().body(error);
++    }
++
++    @ExceptionHandler(MissingServletRequestParameterException.class)
++    public ResponseEntity<ApiError> handleMissingParam(MissingServletRequestParameterException ex) {
++        ApiError error = new ApiError(400, "MISSING_PARAMETER", "Missing required parameter: " + ex.getParameterName());
++        return ResponseEntity.badRequest().body(error);
+     }
+ 
++    // --- 403 Forbidden ---
++
++    @ExceptionHandler(AccessDeniedException.class)
++    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
++        ApiError error = new ApiError(403, "FORBIDDEN", "Access denied");
++        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
++    }
++
++    // --- 404 Not Found ---
++
++    @ExceptionHandler(NoHandlerFoundException.class)
++    public ResponseEntity<ApiError> handleNotFound(NoHandlerFoundException ex) {
++        ApiError error = new ApiError(404, "NOT_FOUND", "Endpoint not found: " + ex.getRequestURL());
++        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
++    }
++
++    @ExceptionHandler(ResourceNotFoundException.class)
++    public ResponseEntity<ApiError> handleResourceNotFound(ResourceNotFoundException ex) {
++        ApiError error = new ApiError(404, "RESOURCE_NOT_FOUND", ex.getMessage());
++        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
++    }
++
++    // --- 405 Method Not Allowed ---
++
++    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
++    public ResponseEntity<ApiError> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
++        ApiError error = new ApiError(405, "METHOD_NOT_ALLOWED", "HTTP method " + ex.getMethod() + " not supported");
++        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
++    }
++
++    // --- 500 Internal Server Error ---
++
+     @ExceptionHandler(Exception.class)
+-    public ResponseEntity<Map<String, String>> handleGeneral(Exception ex) {
+-        log.error("Unhandled exception", ex);
+-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+-                .body(Map.of("error", "An unexpected error occurred"));
++    public ResponseEntity<ApiError> handleGeneral(Exception ex) {
++        log.error("Unhandled exception: {}", ex.getMessage(), ex);
++        ApiError error = new ApiError(500, "INTERNAL_ERROR", "An unexpected error occurred");
++        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+     }
+ }
+diff --git a/backend/src/main/java/com/c4gt/security/JwtAuthFilter.java b/backend/src/main/java/com/c4gt/security/JwtAuthFilter.java
+index 83ec45d..7b03f7e 100644
+--- a/backend/src/main/java/com/c4gt/security/JwtAuthFilter.java
++++ b/backend/src/main/java/com/c4gt/security/JwtAuthFilter.java
+@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
+ import jakarta.servlet.http.HttpServletResponse;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
++import org.slf4j.MDC;
+ import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+@@ -50,6 +51,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
+                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+ 
+                     SecurityContextHolder.getContext().setAuthentication(auth);
++                    MDC.put("userId", String.valueOf(userId));
+                 } else {
+                     log.debug("Rejected non-access token type: {}", tokenType);
+                 }
+diff --git a/backend/src/main/java/com/c4gt/security/JwtTokenProvider.java b/backend/src/main/java/com/c4gt/security/JwtTokenProvider.java
+index e2cfba3..01b0eb2 100644
+--- a/backend/src/main/java/com/c4gt/security/JwtTokenProvider.java
++++ b/backend/src/main/java/com/c4gt/security/JwtTokenProvider.java
+@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
+ import javax.crypto.SecretKey;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Date;
++import java.util.UUID;
+ 
+ @Component
+ public class JwtTokenProvider {
+@@ -40,6 +41,7 @@ public class JwtTokenProvider {
+     private String buildToken(Long userId, String email, String type, long expirationMs) {
+         Date now = new Date();
+         return Jwts.builder()
++                .id(UUID.randomUUID().toString())
+                 .subject(String.valueOf(userId))
+                 .claim("email", email)
+                 .claim("type", type)
+@@ -62,6 +64,16 @@ public class JwtTokenProvider {
+         return parseToken(token).get("type", String.class);
+     }
+ 
++    public String getJtiFromToken(String token) {
++        return parseToken(token).getId();
++    }
++
++    /** Remaining time until token expires (ms). For blacklist TTL. */
++    public long getRemainingExpiry(String token) {
++        Date exp = parseToken(token).getExpiration();
++        return Math.max(0, exp.getTime() - System.currentTimeMillis());
++    }
++
+     public boolean validateToken(String token) {
+         try {
+             parseToken(token);
+diff --git a/backend/src/main/resources/application.yml b/backend/src/main/resources/application.yml
+index 9a85607..8ed80ab 100644
+--- a/backend/src/main/resources/application.yml
++++ b/backend/src/main/resources/application.yml
+@@ -1,9 +1,17 @@
+ server:
+   port: 8080
++  shutdown: graceful  # Wait for in-flight requests to complete
++  compression:
++    enabled: true
++    min-response-size: 1024
++    mime-types: application/json,application/xml,text/html,text/plain,text/css,application/javascript
++
+ 
+ spring:
+   application:
+     name: bounce-backend
++  lifecycle:
++    timeout-per-shutdown-phase: 30s  # Max wait during shutdown
+ 
+   # PostgreSQL
+   datasource:
+@@ -15,6 +23,10 @@ spring:
+       maximum-pool-size: 20
+       minimum-idle: 5
+       connection-timeout: 30000
++      idle-timeout: 600000           # 10 min — close idle connections
++      max-lifetime: 1800000          # 30 min — recycle connections
++      leak-detection-threshold: 60000  # Log warning if connection not returned in 60s
++      connection-test-query: SELECT 1
+ 
+   # JPA — validate only, Flyway owns the schema
+   jpa:
+@@ -25,6 +37,7 @@ spring:
+       hibernate:
+         dialect: org.hibernate.dialect.PostgreSQLDialect
+         format_sql: false
++    open-in-view: false  # Prevent lazy loading outside transactions
+ 
+   # Flyway migrations
+   flyway:
+@@ -64,18 +77,26 @@ app:
+ brevo:
+   api-key: ${BREVO_API_KEY:}
+ 
+-# Actuator
++# Actuator — health checks, metrics, info, prometheus
+ management:
+   endpoints:
+     web:
+       exposure:
+-        include: health,metrics
++        include: health,metrics,info,prometheus
+   endpoint:
+     health:
+       show-details: when-authorized
++      show-components: when-authorized
++  metrics:
++    export:
++      prometheus:
++        enabled: true
+ 
+ logging:
+   level:
+     com.c4gt: INFO
+     org.springframework.web: WARN
+     org.hibernate: WARN
++    org.hibernate.SQL: WARN
++    org.hibernate.stat: WARN
++

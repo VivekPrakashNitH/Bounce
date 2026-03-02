@@ -6,18 +6,21 @@ import { BounceAvatar } from '../ui/BounceAvatar';
 import { COURSE_CONTENT } from '../../data/courseContent';
 import { fullResetTrack, readCompletedLevels } from '../../routing/progress';
 import { TrackId } from '../../routing/tracks';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
-    onStartGame: () => void;
-    onStartLLD: () => void;
-    onStartQuiz: () => void;
-    onStartGameDev: () => void;
-    onStartCyber: () => void;
+    onStartGame?: () => void;
+    onStartLLD?: () => void;
+    onStartQuiz?: () => void;
+    onStartGameDev?: () => void;
+    onStartCyber?: () => void;
 }
 
 export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQuiz, onStartGameDev, onStartCyber }) => {
+    const navigate = useNavigate();
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [completedLevels, setCompletedLevels] = useState<string[]>([]);
+
 
     useEffect(() => {
         // Load Completed Levels for progress bars
@@ -119,7 +122,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
             <div className="z-10 grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-5xl px-3 sm:px-8 mb-12">
 
                 {/* Track 1: System Design */}
-                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-blue-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] cursor-pointer" onClick={onStartGame}>
+                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-blue-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] cursor-pointer" onClick={onStartGame || (() => navigate('/system-design'))}>
                     <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-blue-500 opacity-20 group-hover:opacity-100 transition-opacity">
                         {systemDesignProgress > 0 ? (
                             <button
@@ -150,7 +153,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
                 </div>
 
                 {/* Track 2: Cybersecurity */}
-                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] cursor-pointer" onClick={onStartCyber}>
+                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] cursor-pointer" onClick={onStartCyber || (() => navigate('/cybersecurity'))}>
                     <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-purple-500 opacity-20 group-hover:opacity-100 transition-opacity">
                         {cyberProgress > 0 && (
                             <button
@@ -182,7 +185,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
                 </div>
 
                 {/* Track 3: Game Engineering */}
-                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.2)] cursor-pointer" onClick={onStartGameDev}>
+                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.2)] cursor-pointer" onClick={onStartGameDev || (() => navigate('/gaming'))}>
                     <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-red-500 opacity-20 group-hover:opacity-100 transition-opacity">
                         {gameProgress > 0 && (
                             <button
@@ -214,7 +217,7 @@ export const LandingPage: React.FC<Props> = ({ onStartGame, onStartLLD, onStartQ
                 </div>
 
                 {/* Track 4: LLD */}
-                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-green-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] cursor-pointer" onClick={onStartLLD}>
+                <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-green-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-6 backdrop-blur-md transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] cursor-pointer" onClick={onStartLLD || (() => navigate('/case-studies'))}>
                     <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-green-500 opacity-20 group-hover:opacity-100 transition-opacity">
                         {lldProgress > 0 && (
                             <button

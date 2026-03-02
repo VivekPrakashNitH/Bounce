@@ -1,3 +1,3 @@
 // LLD Patterns Components
-export { HldLldExplainer } from './HldLldExplainer';
-export { BackendLanguagesDemo } from './BackendLanguagesDemo';
+export { HldLldExplainer } from '../system-design/HldLldExplainer';
+export { BackendLanguagesDemo } from '../system-design/BackendLanguagesDemo';
